@@ -1,0 +1,7 @@
+[package]
+name = "stats-rs"
+version = "0.1.0"
+authors = ["TSH Labs"]
+
+[dependencies]
+getopts = "0.2.14"
