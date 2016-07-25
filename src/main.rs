@@ -21,6 +21,7 @@ extern crate getopts;
 use std::env;
 use std::cmp::Ordering;
 use std::fmt;
+//use std::f64::pow;
 use std::io::{stdin, stderr, BufRead, BufReader, Write};
 use std::process;
 use getopts::Options;
@@ -54,6 +55,7 @@ pub struct Statistics {
     upper: f64,
     lower: f64,
     median: f64,
+    stddev: f64,
 }
 
 
@@ -76,6 +78,7 @@ impl Statistics {
         let median = Self::compute_median(filtered);
         let upper = Self::compute_upper(filtered);
         let lower = Self::compute_lower(filtered);
+        let stddev = Self::compute_stddev(filtered, mean);
 
         Statistics {
             percentile: percentile,
@@ -84,6 +87,7 @@ impl Statistics {
             upper: upper,
             lower: lower,
             median: median,
+            stddev: stddev,
         }
     }
 
@@ -112,6 +116,10 @@ impl Statistics {
         self.median
     }
 
+    pub fn stddev(&self) -> f64 {
+        self.stddev
+    }
+
     ///
     fn slice_values(vals: &[f64], percentile: u8) -> &[f64] {
         let num_vals = vals.len();
@@ -129,6 +137,10 @@ impl Statistics {
         let index = (percentile as usize * num_vals) / 100;
         &vals[0..index]
     }
+
+
+    // TODO: See if this can all be replaced with the stats crate (also in legato)
+
 
     ///
     fn compute_mean(vals: &[f64]) -> f64 {
@@ -172,6 +184,20 @@ impl Statistics {
 
         lower
     }
+
+    fn compute_stddev(vals: &[f64], mean: f64) -> f64 {
+        let num = vals.len() as f64;
+        if num == 0f64 {
+            return 0f64;
+        }
+
+        let sum_deviance = vals.iter().fold(0f64, |mut sum, &x| {
+            sum = sum + (x - mean).powi(2); sum
+        });
+
+        let deviance = sum_deviance / num;
+        deviance.sqrt()
+    }
 }
 
 
@@ -183,12 +209,14 @@ impl fmt::Display for Statistics {
             try!(write!(f, "upper_{}: {}{}", p, self.upper(), NL));
             try!(write!(f, "lower_{}: {}{}", p, self.lower(), NL));
             try!(write!(f, "median_{}: {}{}", p, self.median(), NL));
+            try!(write!(f, "stddev_{}: {}{}", p, self.stddev(), NL));
         } else {
             try!(write!(f, "count: {}{}", self.count(), NL));
             try!(write!(f, "mean: {}{}", self.mean(), NL));
             try!(write!(f, "upper: {}{}", self.upper(), NL));
             try!(write!(f, "lower: {}{}", self.lower(), NL));
             try!(write!(f, "median: {}{}", self.median(), NL));
+            try!(write!(f, "stddev: {}{}", self.stddev(), NL));
         }
 
         Ok(())
