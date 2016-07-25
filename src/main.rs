@@ -62,19 +62,20 @@ impl Statistics {
     ///
     ///
     pub fn from(vals: &[f64], percentile: Option<u8>) -> Statistics {
-        let mut our_vals = Vec::from(if let Some(v) = percentile {
-            Self::slice_values(vals, v)
+        let mut sorted = Vec::from(vals);
+        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
+
+        let filtered = if let Some(v) = percentile {
+            Self::slice_values(&sorted, v)
         } else {
-            vals
-        });
+            &sorted
+        };
 
-        our_vals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
-
-        let count = our_vals.len();
-        let mean = Self::compute_mean(&our_vals);
-        let median = Self::compute_median(&our_vals);
-        let upper = Self::compute_upper(&our_vals);
-        let lower = Self::compute_lower(&our_vals);
+        let count = filtered.len();
+        let mean = Self::compute_mean(filtered);
+        let median = Self::compute_median(filtered);
+        let upper = Self::compute_upper(filtered);
+        let lower = Self::compute_lower(filtered);
 
         Statistics {
             percentile: percentile,
@@ -251,18 +252,20 @@ fn main() {
         process::exit(0);
     }
 
-    let reader = BufReader::new(stdin());
-    let (vals, filtered) = get_values(reader);
-
-    let global_stats = Statistics::from(&filtered, None);
-    print!("{}", global_stats);
-
+    // TODO: Do this better
     let percents: Vec<u8> = if let Some(p) = matches.opt_str("p") {
         get_percents(p)
     } else {
         Vec::from(DEFAULT_PERCENTILES)
     };
 
+    let reader = BufReader::new(stdin());
+    let (unfiltered, filtered) = get_values(reader);
+
+    let global_stats = Statistics::from(&filtered, None);
+    print!("{}", global_stats);
+
+    // TODO: Parse error handling option and use it here
     for p in percents {
         print!("{}", Statistics::from(&filtered, Some(p as u8)));
     }
