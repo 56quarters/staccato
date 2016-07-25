@@ -64,13 +64,10 @@ impl Statistics {
     ///
     ///
     pub fn from(vals: &[f64], percentile: Option<u8>) -> Statistics {
-        let mut sorted = Vec::from(vals);
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
-
         let filtered = if let Some(v) = percentile {
-            Self::slice_values(&sorted, v)
+            Self::slice_values(vals, v)
         } else {
-            &sorted
+            vals
         };
 
         let count = filtered.len();
@@ -138,9 +135,7 @@ impl Statistics {
         &vals[0..index]
     }
 
-
     // TODO: See if this can all be replaced with the stats crate (also in legato)
-
 
     ///
     fn compute_mean(vals: &[f64]) -> f64 {
@@ -288,7 +283,8 @@ fn main() {
     };
 
     let reader = BufReader::new(stdin());
-    let (unfiltered, filtered) = get_values(reader);
+    let (_, mut filtered) = get_values(reader);
+    filtered.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
 
     let global_stats = Statistics::from(&filtered, None);
     print!("{}", global_stats);
