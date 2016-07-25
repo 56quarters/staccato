@@ -21,7 +21,8 @@ extern crate getopts;
 use std::env;
 use std::cmp::Ordering;
 use std::fmt;
-use std::io::{BufRead, BufReader};
+use std::io::{stdin, stderr, BufRead, BufReader, Write};
+use std::process;
 use getopts::Options;
 
 
@@ -208,14 +209,61 @@ fn get_values<T: BufRead>(reader: T) -> (Vec<Option<f64>>, Vec<f64>) {
 }
 
 
+fn get_usage(prog: &str, opts: &Options) -> String {
+    let brief = format!("Usage: {} [options]", prog);
+    opts.usage(&brief)
+}
+
+
+fn get_percents(pcnt: String) -> Vec<u8> {
+    pcnt.split(",")
+        .flat_map(|v| v.parse::<u8>().ok())
+        .filter(|&v| v > 0 && v < 100)
+        .collect()
+}
+
+
 fn main() {
-    let reader = BufReader::new(std::io::stdin());
+    let args = env::args().collect::<Vec<String>>();
+    let prog = args[0].clone();
+
+    let mut opts = Options::new();
+    opts.optopt("p", "percentiles", "Comma separated list of the percentiles \
+                                     to compute, numbers between 1 and 99",
+                "PCNT");
+    opts.optopt("e", "errors", "How to handle malformed input. Options \
+                                are to 'ignore' it, replace it with the \
+                                'median' value of valid input, replace it \
+                                with the 'mean' value of valid input, or \
+                                replace it with a particular value.", "ERR");
+    opts.optflag("h", "help", "Print this help menu");
+
+    let matches = match opts.parse(&args[1..]) {
+        Ok(v) => v,
+        Err(e) => {
+            write!(stderr(), "Could not parse arguments: {}", e).unwrap();
+            process::exit(1);
+        }
+    };
+
+    if matches.opt_present("h") {
+        println!("{}", get_usage(&prog, &opts));
+        process::exit(0);
+    }
+
+    let reader = BufReader::new(stdin());
     let (vals, filtered) = get_values(reader);
 
     let global_stats = Statistics::from(&filtered, None);
     print!("{}", global_stats);
 
-    for &p in DEFAULT_PERCENTILES {
+    let percents: Vec<u8> = if let Some(p) = matches.opt_str("p") {
+        get_percents(p)
+    } else {
+        Vec::from(DEFAULT_PERCENTILES)
+    };
+
+    for p in percents {
         print!("{}", Statistics::from(&filtered, Some(p as u8)));
     }
 }
