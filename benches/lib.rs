@@ -18,11 +18,13 @@ fn get_test_values(path: &str) -> Vec<f64> {
     staccato::get_sorted_values(buf)
 }
 
+
 #[bench]
 fn test_statistics_small_from_sliced_values(b: &mut Bencher) {
     let values = get_test_values(SMALL_FILE);
     b.iter(|| staccato::Statistics::from(&values, Some(75)));
 }
+
 
 #[bench]
 fn test_statistics_small_from_all_values(b: &mut Bencher) {
@@ -30,11 +32,13 @@ fn test_statistics_small_from_all_values(b: &mut Bencher) {
     b.iter(|| staccato::Statistics::from(&values, None));
 }
 
+
 #[bench]
 fn test_statistics_med_from_sliced_values(b: &mut Bencher) {
     let values = get_test_values(MED_FILE);
     b.iter(|| staccato::Statistics::from(&values, Some(75)));
 }
+
 
 #[bench]
 fn test_statistics_med_from_all_values(b: &mut Bencher) {
@@ -42,11 +46,13 @@ fn test_statistics_med_from_all_values(b: &mut Bencher) {
     b.iter(|| staccato::Statistics::from(&values, None));
 }
 
+
 #[bench]
 fn test_statistics_large_from_sliced_values(b: &mut Bencher) {
     let values = get_test_values(LARGE_FILE);
     b.iter(|| staccato::Statistics::from(&values, Some(75)));
 }
+
 
 #[bench]
 fn test_statistics_large_from_all_values(b: &mut Bencher) {
