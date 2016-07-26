@@ -29,6 +29,19 @@ pub const NL: &'static str = "\r\n";
 pub const NL: &'static str = "\n";
 
 
+
+pub fn get_sorted_values<T: BufRead>(reader: T) -> Vec<f64> {
+    let mut vals: Vec<f64> = reader.lines()
+        .flat_map(|v| v.ok())
+        .filter_map(|v| v.parse::<f64>().ok())
+        .collect();
+
+    vals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
+
+    vals
+}
+
+
 pub struct StatisticsBundle {
     global: Statistics,
     percentiles: Vec<Statistics>,
@@ -37,17 +50,11 @@ pub struct StatisticsBundle {
 
 impl StatisticsBundle {
     pub fn from_reader<T: BufRead>(reader: T, percentiles: &[u8]) -> StatisticsBundle {
-        let mut vals: Vec<f64> = reader.lines()
-            .flat_map(|v| v.ok())
-            .filter_map(|v| v.parse::<f64>().ok())
-            .collect();
-
-        vals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
-
-        Self::from(&vals, percentiles)
+        let vals = get_sorted_values(reader);
+        Self::from_sorted(&vals, percentiles)
     }
 
-    pub fn from(vals: &[f64], percentiles: &[u8]) -> StatisticsBundle {
+    pub fn from_sorted(vals: &[f64], percentiles: &[u8]) -> StatisticsBundle {
         let global_stats = Statistics::from(vals, None);
         let percentile_stats = percentiles.iter()
             .map(|&p| Statistics::from(vals, Some(p)))
@@ -101,8 +108,7 @@ impl Statistics {
         let count = filtered.len();
         let mean = Self::compute_mean(filtered);
         let median = Self::compute_median(filtered);
-        let upper = Self::compute_upper(filtered);
-        let lower = Self::compute_lower(filtered);
+        let (lower, upper) = Self::compute_min_max(filtered);
         let stddev = Self::compute_stddev(filtered, mean);
 
         Statistics {
@@ -148,17 +154,6 @@ impl Statistics {
     ///
     fn slice_values(vals: &[f64], percentile: u8) -> &[f64] {
         let num_vals = vals.len();
-
-        // Pick the end index for each percentile that we've been asked to
-        // compute. Use some basic math to avoid having to deal with any
-        // floating point operations or numbers at all. For example, if
-        // p = 90, n = the number of entries in the vector of values, and
-        // x is the desired index for the 90th percentile:
-        //
-        //  90 * n     90      n
-        // -------- = ----- * --- = 0.9 * n = x
-        //    100      100     1
-        //
         let index = (percentile as usize * num_vals) / 100;
         &vals[0..index]
     }
@@ -180,26 +175,21 @@ impl Statistics {
         *med.unwrap_or(&0f64)
     }
 
-    fn compute_upper(vals: &[f64]) -> f64 {
+    fn compute_min_max(vals: &[f64]) -> (f64, f64) {
         let mut upper = std::f64::MIN;
+        let mut lower = std::f64::MAX;
+
         for &val in vals {
             if val > upper {
-                upper = val
+                upper = val;
             }
-        }
 
-        upper
-    }
-
-    fn compute_lower(vals: &[f64]) -> f64 {
-        let mut lower = std::f64::MAX;
-        for &val in vals {
             if val < lower {
-                lower = val
+                lower = val;
             }
         }
 
-        lower
+        (lower, upper)
     }
 
     fn compute_stddev(vals: &[f64], mean: f64) -> f64 {
@@ -248,5 +238,69 @@ impl fmt::Display for Statistics {
         }
 
         Ok(())
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_statistics_full_values_count() {
+
+    }
+
+    #[test]
+    fn test_statistics_full_values_mean() {
+
+    }
+
+    #[test]
+    fn test_statistics_full_values_upper() {
+
+    }
+
+    #[test]
+    fn test_statistics_full_values_lower() {
+
+    }
+
+    #[test]
+    fn test_statistics_full_values_median() {
+
+    }
+
+    #[test]
+    fn test_statistics_full_values_stddev() {
+
+    }
+
+    #[test]
+    fn test_statistics_75_values_count() {
+
+    }
+
+    #[test]
+    fn test_statistics_75_values_mean() {
+
+    }
+
+    #[test]
+    fn test_statistics_75_values_upper() {
+
+    }
+
+    #[test]
+    fn test_statistics_75_values_lower() {
+
+    }
+
+    #[test]
+    fn test_statistics_75_values_median() {
+
+    }
+
+    #[test]
+    fn test_statistics_75_values_stddev() {
+
     }
 }
