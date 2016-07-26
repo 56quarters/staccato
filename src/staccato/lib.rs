@@ -1,4 +1,4 @@
-// stats-rs - Statistics from the command line
+// Staccato - Statistics from the command line
 //
 // Copyright 2016 TSH Labs
 //
@@ -16,33 +16,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-extern crate getopts;
 
-use std::env;
-use std::cmp::Ordering;
 use std::fmt;
-//use std::f64::pow;
-use std::io::{stdin, stderr, BufRead, BufReader, Write};
-use std::process;
-use getopts::Options;
 
-
-const DEFAULT_PERCENTILES: &'static [u8] = &[75, 90, 95, 99];
 
 #[cfg(windows)]
-const NL: &'static str = "\r\n";
+pub const NL: &'static str = "\r\n";
 
 #[cfg(not(windows))]
-const NL: &'static str = "\n";
-
-
-///
-pub enum ErrorPolicy {
-    Ignore,
-    Mean,
-    Median,
-    Value,
-}
+pub const NL: &'static str = "\n";
 
 
 ///
@@ -135,8 +117,6 @@ impl Statistics {
         &vals[0..index]
     }
 
-    // TODO: See if this can all be replaced with the stats crate (also in legato)
-
     ///
     fn compute_mean(vals: &[f64]) -> f64 {
         let num = vals.len() as f64;
@@ -215,82 +195,5 @@ impl fmt::Display for Statistics {
         }
 
         Ok(())
-    }
-}
-
-
-fn get_values<T: BufRead>(reader: T) -> (Vec<Option<f64>>, Vec<f64>) {
-    let vals: Vec<Option<f64>> = reader.lines()
-        .flat_map(|v| v.ok())
-        .map(|v| v.parse::<f64>().ok())
-        .collect();
-
-    let filtered: Vec<f64> = vals.iter()
-        .filter_map(|&v| v)
-        .collect();
-
-    (vals, filtered)
-}
-
-
-fn get_usage(prog: &str, opts: &Options) -> String {
-    let brief = format!("Usage: {} [options]", prog);
-    opts.usage(&brief)
-}
-
-
-fn get_percents(pcnt: String) -> Vec<u8> {
-    pcnt.split(",")
-        .flat_map(|v| v.parse::<u8>().ok())
-        .filter(|&v| v > 0 && v < 100)
-        .collect()
-}
-
-
-fn main() {
-    let args = env::args().collect::<Vec<String>>();
-    let prog = args[0].clone();
-
-    let mut opts = Options::new();
-    opts.optopt("p", "percentiles", "Comma separated list of the percentiles \
-                                     to compute, numbers between 1 and 99",
-                "PCNT");
-    opts.optopt("e", "errors", "How to handle malformed input. Options \
-                                are to 'ignore' it, replace it with the \
-                                'median' value of valid input, replace it \
-                                with the 'mean' value of valid input, or \
-                                replace it with a particular value.", "ERR");
-    opts.optflag("h", "help", "Print this help menu");
-
-    let matches = match opts.parse(&args[1..]) {
-        Ok(v) => v,
-        Err(e) => {
-            write!(stderr(), "Could not parse arguments: {}", e).unwrap();
-            process::exit(1);
-        }
-    };
-
-    if matches.opt_present("h") {
-        println!("{}", get_usage(&prog, &opts));
-        process::exit(0);
-    }
-
-    // TODO: Do this better
-    let percents: Vec<u8> = if let Some(p) = matches.opt_str("p") {
-        get_percents(p)
-    } else {
-        Vec::from(DEFAULT_PERCENTILES)
-    };
-
-    let reader = BufReader::new(stdin());
-    let (_, mut filtered) = get_values(reader);
-    filtered.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
-
-    let global_stats = Statistics::from(&filtered, None);
-    print!("{}", global_stats);
-
-    // TODO: Parse error handling option and use it here
-    for p in percents {
-        print!("{}", Statistics::from(&filtered, Some(p as u8)));
     }
 }

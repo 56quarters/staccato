@@ -1,7 +1,18 @@
 [package]
-name = "stats"
+name = "staccato"
 version = "0.1.0"
 authors = ["TSH Labs"]
+description = "Statistics from the command line"
 
 [dependencies]
 getopts = "0.2.14"
+
+[lib]
+name = "staccato"
+path = "src/staccato/lib.rs"
+
+[[bin]]
+name = "st"
+path = "src/bin/st.rs"
+doc = false
+test = false
