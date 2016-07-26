@@ -26,7 +26,7 @@ use std::io::{stdin, BufRead, BufReader};
 use clap::{Arg, App, ArgMatches};
 use staccato::Statistics;
 
-const DEFAULT_PERCENTILES: &'static [u8] = &[75, 90, 95, 99];
+const DEFAULT_PERCENTILES: &'static [u8] = &[];
 
 
 // TODO: Document that invalid values are discarded
