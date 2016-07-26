@@ -18,6 +18,8 @@
 
 
 use std::fmt;
+use std::cmp::Ordering;
+use std::io::BufRead;
 
 
 #[cfg(windows)]
@@ -25,6 +27,46 @@ pub const NL: &'static str = "\r\n";
 
 #[cfg(not(windows))]
 pub const NL: &'static str = "\n";
+
+
+pub struct StatisticsBundle {
+    global: Statistics,
+    percentiles: Vec<Statistics>,
+}
+
+
+impl StatisticsBundle {
+    pub fn from_reader<T: BufRead>(reader: T, percentiles: &[u8]) -> StatisticsBundle {
+        let mut vals: Vec<f64> = reader.lines()
+            .flat_map(|v| v.ok())
+            .filter_map(|v| v.parse::<f64>().ok())
+            .collect();
+
+        vals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
+
+        Self::from(&vals, percentiles)
+    }
+
+    pub fn from(vals: &[f64], percentiles: &[u8]) -> StatisticsBundle {
+        let global_stats = Statistics::from(vals, None);
+        let percentile_stats = percentiles.iter()
+            .map(|&p| Statistics::from(vals, Some(p)))
+            .collect();
+
+        StatisticsBundle {
+            global: global_stats,
+            percentiles: percentile_stats,
+        }
+    }
+
+    pub fn global_stats(&self) -> &Statistics {
+        &self.global
+    }
+
+    pub fn percentile_stats(&self) -> &[Statistics] {
+        &self.percentiles
+    }
+}
 
 
 ///

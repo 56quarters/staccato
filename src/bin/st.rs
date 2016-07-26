@@ -20,25 +20,12 @@ extern crate staccato;
 #[macro_use] extern crate clap;
 
 use std::env;
-use std::cmp::Ordering;
-use std::io::{stdin, BufRead, BufReader};
+use std::io::{stdin, BufReader};
 
 use clap::{Arg, App, ArgMatches};
-use staccato::Statistics;
+use staccato::StatisticsBundle;
 
 const DEFAULT_PERCENTILES: &'static [u8] = &[];
-
-
-// TODO: Document that invalid values are discarded
-fn get_values<T: BufRead>(reader: T) -> Vec<f64> {
-    let vals: Vec<f64> = reader.lines()
-        .flat_map(|v| v.ok())
-        .map(|v| v.parse::<f64>().ok())
-        .filter_map(|v| v)
-        .collect();
-
-    vals
-}
 
 
 fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
@@ -90,20 +77,11 @@ fn main() {
         Vec::from(DEFAULT_PERCENTILES)
     };
 
-    // TODO: Move reading from buffer and sorting to its own thing
-    // in the lib
     let reader = BufReader::new(stdin());
-    let mut values = get_values(reader);
-    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
+    let stats = StatisticsBundle::from_reader(reader, &percents);
 
-    // TODO: Have some wrapper that computes global stats and each of
-    // the requested percentile stats from a sorted vector.
-    let global_stats = Statistics::from(&values, None);
-    print!("{}", global_stats);
-
-    // TODO: Move formatting of stats to a separate struct or
-    // function or something. Seems weird to overload fmt::Display.
-    for p in percents {
-        print!("{}", Statistics::from(&values, Some(p as u8)));
+    print!("{}", stats.global_stats());
+    for s in stats.percentile_stats() {
+        print!("{}", s)
     }
 }
