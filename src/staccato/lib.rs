@@ -167,9 +167,25 @@ impl Statistics {
 
     ///
     fn compute_median(vals: &[f64]) -> f64 {
-        let mid = vals.len() / 2;
-        let med = vals.get(mid);
-        *med.unwrap_or(&0f64)
+        let len = vals.len();
+        let is_odd = len % 2 == 1;
+
+        let median = if is_odd {
+            let mid = len / 2;
+            vals[mid]
+        } else {
+            let upper_med = len / 2;
+            let lower_med = upper_med - 1;
+            // It should never be the case that these indexes
+            // don't exist in the slice. If there's no entries
+            // we should have already just returned the default
+            // stats instance. If there's only one entry we
+            // would have handled that with the 'is_odd' case
+            // above. Otherwise this will do the right thing.
+            (vals[upper_med] + vals[lower_med]) / 2f64
+        };
+
+        median
     }
 
     fn compute_min_max_sum(vals: &[f64]) -> (f64, f64, f64) {
@@ -254,6 +270,10 @@ mod tests {
         1f64, 2f64, 5f64, 7f64, 9f64, 12f64
     ];
 
+    const SINGLE: &'static [f64] = &[13f64];
+
+    const EMPTY: &'static [f64] = &[];
+
     #[test]
     fn test_statistics_full_values_count() {
         let stats = Statistics::from(VALUES, None);
@@ -286,7 +306,8 @@ mod tests {
 
     #[test]
     fn test_statistics_full_values_median() {
-        // TODO: Median is calculated wrong
+        let stats = Statistics::from(VALUES, None);
+        assert_eq!(6f64, stats.median());
     }
 
     #[test]
@@ -327,12 +348,97 @@ mod tests {
 
     #[test]
     fn test_statistics_50_values_median() {
-        // TODO: Median is calculated wrong
+        let stats = Statistics::from(VALUES, Some(50));
+        assert_eq!(2f64, stats.median());
     }
 
     #[test]
     fn test_statistics_50_values_stddev() {
         let stats = Statistics::from(VALUES, Some(50));
         assert!((1.70 - stats.stddev()).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_statistics_empty_values_count() {
+        let stats = Statistics::from(EMPTY, None);
+        assert_eq!(0, stats.count());
+    }
+
+    #[test]
+    fn test_statistics_empty_values_sum() {
+        let stats = Statistics::from(EMPTY, None);
+        assert_eq!(0f64, stats.sum());
+    }
+
+    #[test]
+    fn test_statistics_empty_values_mean() {
+        let stats = Statistics::from(EMPTY, None);
+        assert_eq!(0f64, stats.mean());
+    }
+
+    #[test]
+    fn test_statistics_empty_values_upper() {
+        let stats = Statistics::from(EMPTY, None);
+        assert_eq!(0f64, stats.upper());
+    }
+
+    #[test]
+    fn test_statistics_empty_values_lower() {
+        let stats = Statistics::from(EMPTY, None);
+        assert_eq!(0f64, stats.lower());
+    }
+
+    #[test]
+    fn test_statistics_empty_values_median() {
+        let stats = Statistics::from(EMPTY, None);
+        assert_eq!(0f64, stats.median());
+    }
+
+    #[test]
+    fn test_statistics_empty_values_stddev() {
+        let stats = Statistics::from(EMPTY, None);
+        assert_eq!(0f64, stats.stddev());
+    }
+
+    #[test]
+    fn test_statistics_single_value_count() {
+        let stats = Statistics::from(SINGLE, None);
+        assert_eq!(1, stats.count());
+    }
+
+    #[test]
+    fn test_statistics_single_value_sum() {
+        let stats = Statistics::from(SINGLE, None);
+        assert_eq!(13f64, stats.sum());
+    }
+
+    #[test]
+    fn test_statistics_single_value_mean() {
+        let stats = Statistics::from(SINGLE, None);
+        assert_eq!(13f64, stats.mean());
+    }
+
+    #[test]
+    fn test_statistics_single_value_upper() {
+        let stats = Statistics::from(SINGLE, None);
+        assert_eq!(13f64, stats.upper());
+    }
+
+    #[test]
+    fn test_statistics_single_value_lower() {
+        let stats = Statistics::from(SINGLE, None);
+        assert_eq!(13f64, stats.lower());
+    }
+
+    #[test]
+    fn test_statistics_single_value_median() {
+        let stats = Statistics::from(SINGLE, None);
+        assert_eq!(13f64, stats.median());
+    }
+
+    #[test]
+    fn test_statistics_single_value_stddev() {
+        let stats = Statistics::from(SINGLE, None);
+        assert_eq!(0f64, stats.stddev());
     }
 }
