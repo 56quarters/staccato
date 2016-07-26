@@ -5,7 +5,7 @@ authors = ["TSH Labs"]
 description = "Statistics from the command line"
 
 [dependencies]
-getopts = "0.2.14"
+clap = "2.6.0"
 
 [lib]
 name = "staccato"

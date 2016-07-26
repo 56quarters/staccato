@@ -17,21 +17,19 @@
 //
 
 extern crate staccato;
-extern crate getopts;
+#[macro_use] extern crate clap;
 
 use std::env;
 use std::cmp::Ordering;
-use std::fmt;
-use std::io::{stdin, stderr, BufRead, BufReader, Write};
-use std::process;
+use std::io::{stdin, BufRead, BufReader};
 
-use getopts::Options;
-
-use staccato::{Statistics};
+use clap::{Arg, App, ArgMatches};
+use staccato::Statistics;
 
 const DEFAULT_PERCENTILES: &'static [u8] = &[75, 90, 95, 99];
 
 
+// TODO: Document that invalid values are discarded
 fn get_values<T: BufRead>(reader: T) -> Vec<f64> {
     let vals: Vec<f64> = reader.lines()
         .flat_map(|v| v.ok())
@@ -43,13 +41,36 @@ fn get_values<T: BufRead>(reader: T) -> Vec<f64> {
 }
 
 
-fn get_usage(prog: &str, opts: &Options) -> String {
-    let brief = format!("Usage: {} [options]", prog);
-    opts.usage(&brief)
+fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
+    App::new("Staccato")
+        .version(crate_version!())
+        // TODO: Newlines look bad on the CLI
+        .about(
+            "Staccato is a program for generating statistics from a stream \
+             of numbers from the command line. It reads values from STDIN \
+             until the end of the stream (or file being piped in) and computes \
+             things about them such as the median, mean, standard deviation, \
+             and much more.\
+             \n\n\
+             It also computes these things for certain portions of the stream. \
+             By default it will compute statistics for the entire stream, the \
+             lower 75% of values, the lower 90% of values, the lower 95% of \
+             values, and the lower 99% of values.\
+             \n\n\
+             If you've ever used Statsd, the format should seem familiar :)")
+        .arg(Arg::with_name("percentiles")
+             .short("p")
+             .long("percentiles")
+             .help(
+                 "Comma separated list of percentiles (from 1 to 99, \
+                  inclusive) that should have metrics computed. Default \
+                  is 75, 90, 95, and 99.")
+             .takes_value(true))
+        .get_matches_from(args)
 }
 
 
-fn get_percents(pcnt: String) -> Vec<u8> {
+fn get_percents(pcnt: &str) -> Vec<u8> {
     pcnt.split(",")
         .flat_map(|v| v.parse::<u8>().ok())
         .filter(|&v| v > 0 && v < 100)
@@ -58,42 +79,30 @@ fn get_percents(pcnt: String) -> Vec<u8> {
 
 
 fn main() {
-    let args = env::args().collect::<Vec<String>>();
-    let prog = args[0].clone();
+    let args: Vec<String> = env::args().collect();
+    let matches = parse_cli_opts(args);
 
-    let mut opts = Options::new();
-    opts.optopt("p", "percentiles", "Comma separated list of the percentiles \
-                                     to compute, numbers between 1 and 99",
-                "PCNT");
-    opts.optflag("h", "help", "Print this help menu");
-
-    let matches = match opts.parse(&args[1..]) {
-        Ok(v) => v,
-        Err(e) => {
-            write!(stderr(), "Could not parse arguments: {}", e).unwrap();
-            process::exit(1);
-        }
-    };
-
-    if matches.opt_present("h") {
-        println!("{}", get_usage(&prog, &opts));
-        process::exit(0);
-    }
-
-    // TODO: Do this better
-    let percents: Vec<u8> = if let Some(p) = matches.opt_str("p") {
+    // TODO: Handle cases where people want to turn off percentiles
+    // TODO: Handle validation of this via clap
+    let percents: Vec<u8> = if let Some(p) = matches.value_of("p") {
         get_percents(p)
     } else {
         Vec::from(DEFAULT_PERCENTILES)
     };
 
+    // TODO: Move reading from buffer and sorting to its own thing
+    // in the lib
     let reader = BufReader::new(stdin());
     let mut values = get_values(reader);
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
 
+    // TODO: Have some wrapper that computes global stats and each of
+    // the requested percentile stats from a sorted vector.
     let global_stats = Statistics::from(&values, None);
     print!("{}", global_stats);
 
+    // TODO: Move formatting of stats to a separate struct or
+    // function or something. Seems weird to overload fmt::Display.
     for p in percents {
         print!("{}", Statistics::from(&values, Some(p as u8)));
     }
