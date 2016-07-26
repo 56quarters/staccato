@@ -166,10 +166,6 @@ impl Statistics {
     ///
     fn compute_mean(vals: &[f64]) -> f64 {
         let num = vals.len() as f64;
-        if num == 0f64 {
-            return 0f64;
-        }
-
         let sum = vals.iter().fold(0f64, |mut sum, &x| {
             sum = sum + x; sum
         });
@@ -208,10 +204,6 @@ impl Statistics {
 
     fn compute_stddev(vals: &[f64], mean: f64) -> f64 {
         let num = vals.len() as f64;
-        if num == 0f64 {
-            return 0f64;
-        }
-
         let sum_deviance = vals.iter().fold(0f64, |mut sum, &x| {
             sum = sum + (x - mean).powi(2); sum
         });
