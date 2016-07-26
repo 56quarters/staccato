@@ -82,6 +82,7 @@ impl StatisticsBundle {
 pub struct Statistics {
     percentile: Option<u8>,
     count: usize,
+    sum: f64,
     mean: f64,
     upper: f64,
     lower: f64,
@@ -106,14 +107,15 @@ impl Statistics {
         }
 
         let count = filtered.len();
-        let mean = Self::compute_mean(filtered);
+        let (lower, upper, sum) = Self::compute_min_max_sum(filtered);
+        let mean = sum / count as f64;
         let median = Self::compute_median(filtered);
-        let (lower, upper) = Self::compute_min_max(filtered);
         let stddev = Self::compute_stddev(filtered, mean);
 
         Statistics {
             percentile: percentile,
             count: count,
+            sum: sum,
             mean: mean,
             upper: upper,
             lower: lower,
@@ -125,6 +127,11 @@ impl Statistics {
     ///
     pub fn count(&self) -> usize {
         self.count
+    }
+
+    ///
+    pub fn sum(&self) -> f64 {
+        self.sum
     }
 
     ///
@@ -159,25 +166,16 @@ impl Statistics {
     }
 
     ///
-    fn compute_mean(vals: &[f64]) -> f64 {
-        let num = vals.len() as f64;
-        let sum = vals.iter().fold(0f64, |mut sum, &x| {
-            sum = sum + x; sum
-        });
-
-        sum / num
-    }
-
-    ///
     fn compute_median(vals: &[f64]) -> f64 {
         let mid = vals.len() / 2;
         let med = vals.get(mid);
         *med.unwrap_or(&0f64)
     }
 
-    fn compute_min_max(vals: &[f64]) -> (f64, f64) {
+    fn compute_min_max_sum(vals: &[f64]) -> (f64, f64, f64) {
         let mut upper = std::f64::MIN;
         let mut lower = std::f64::MAX;
+        let mut sum = 0f64;
 
         for &val in vals {
             if val > upper {
@@ -187,10 +185,13 @@ impl Statistics {
             if val < lower {
                 lower = val;
             }
+
+            sum += val;
         }
 
-        (lower, upper)
+        (lower, upper, sum)
     }
+
 
     fn compute_stddev(vals: &[f64], mean: f64) -> f64 {
         let num = vals.len() as f64;
@@ -209,6 +210,7 @@ impl Default for Statistics {
         Statistics {
             percentile: None,
             count: 0,
+            sum: 0f64,
             mean: 0f64,
             upper: 0f64,
             lower: 0f64,
@@ -223,6 +225,7 @@ impl fmt::Display for Statistics {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(p) = self.percentile {
             try!(write!(f, "count_{}: {}{}", p, self.count(), NL));
+            try!(write!(f, "sum_{}: {}{}", p, self.sum(), NL));
             try!(write!(f, "mean_{}: {}{}", p, self.mean(), NL));
             try!(write!(f, "upper_{}: {}{}", p, self.upper(), NL));
             try!(write!(f, "lower_{}: {}{}", p, self.lower(), NL));
@@ -230,6 +233,7 @@ impl fmt::Display for Statistics {
             try!(write!(f, "stddev_{}: {}{}", p, self.stddev(), NL));
         } else {
             try!(write!(f, "count: {}{}", self.count(), NL));
+            try!(write!(f, "sum: {}{}", self.sum(), NL));
             try!(write!(f, "mean: {}{}", self.mean(), NL));
             try!(write!(f, "upper: {}{}", self.upper(), NL));
             try!(write!(f, "lower: {}{}", self.lower(), NL));
