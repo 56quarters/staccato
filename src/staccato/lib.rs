@@ -94,6 +94,10 @@ impl Statistics {
             vals
         };
 
+        if filtered.len() == 0 {
+            return Statistics::default();
+        }
+
         let count = filtered.len();
         let mean = Self::compute_mean(filtered);
         let median = Self::compute_median(filtered);
@@ -214,6 +218,21 @@ impl Statistics {
 
         let deviance = sum_deviance / num;
         deviance.sqrt()
+    }
+}
+
+
+impl Default for Statistics {
+    fn default() -> Statistics {
+        Statistics {
+            percentile: None,
+            count: 0,
+            mean: 0f64,
+            upper: 0f64,
+            lower: 0f64,
+            median: 0f64,
+            stddev: 0f64,
+        }
     }
 }
 
