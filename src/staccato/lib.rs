@@ -248,63 +248,91 @@ impl fmt::Display for Statistics {
 
 #[cfg(test)]
 mod tests {
+    use super::Statistics;
+
+    const VALUES: &'static [f64] = &[
+        1f64, 2f64, 5f64, 7f64, 9f64, 12f64
+    ];
+
     #[test]
     fn test_statistics_full_values_count() {
+        let stats = Statistics::from(VALUES, None);
+        assert_eq!(6, stats.count());
+    }
 
+    #[test]
+    fn test_statistics_full_values_sum() {
+        let stats = Statistics::from(VALUES, None);
+        assert_eq!(36f64, stats.sum());
     }
 
     #[test]
     fn test_statistics_full_values_mean() {
-
+        let stats = Statistics::from(VALUES, None);
+        assert_eq!(6f64, stats.mean());
     }
 
     #[test]
     fn test_statistics_full_values_upper() {
-
+        let stats = Statistics::from(VALUES, None);
+        assert_eq!(12f64, stats.upper());
     }
 
     #[test]
     fn test_statistics_full_values_lower() {
-
+        let stats = Statistics::from(VALUES, None);
+        assert_eq!(1f64, stats.lower());
     }
 
     #[test]
     fn test_statistics_full_values_median() {
-
+        // TODO: Median is calculated wrong
     }
 
     #[test]
     fn test_statistics_full_values_stddev() {
-
+        let stats = Statistics::from(VALUES, None);
+        assert!((3.83 - stats.stddev()).abs() < 0.01);
     }
 
     #[test]
-    fn test_statistics_75_values_count() {
-
+    fn test_statistics_50_values_count() {
+        let stats = Statistics::from(VALUES, Some(50));
+        assert_eq!(3, stats.count());
     }
 
     #[test]
-    fn test_statistics_75_values_mean() {
-
+    fn test_statistics_50_values_sum() {
+        let stats = Statistics::from(VALUES, Some(50));
+        assert_eq!(8f64, stats.sum());
     }
 
     #[test]
-    fn test_statistics_75_values_upper() {
-
+    fn test_statistics_50_values_mean() {
+        let stats = Statistics::from(VALUES, Some(50));
+        assert!((2.66 - stats.mean()).abs() < 0.01);
     }
 
     #[test]
-    fn test_statistics_75_values_lower() {
-
+    fn test_statistics_50_values_upper() {
+        let stats = Statistics::from(VALUES, Some(50));
+        assert_eq!(5f64, stats.upper());
     }
 
     #[test]
-    fn test_statistics_75_values_median() {
-
+    fn test_statistics_50_values_lower() {
+        let stats = Statistics::from(VALUES, Some(50));
+        assert_eq!(1f64, stats.lower());
     }
 
     #[test]
-    fn test_statistics_75_values_stddev() {
+    fn test_statistics_50_values_median() {
+        // TODO: Median is calculated wrong
+    }
 
+    #[test]
+    fn test_statistics_50_values_stddev() {
+        let stats = Statistics::from(VALUES, Some(50));
+        assert!((1.70 - stats.stddev()).abs() < 0.01);
     }
 }
