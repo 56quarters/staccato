@@ -125,6 +125,11 @@ impl Statistics {
     }
 
     ///
+    pub fn percentile(&self) -> Option<u8> {
+        self.percentile
+    }
+
+    ///
     pub fn count(&self) -> usize {
         self.count
     }
