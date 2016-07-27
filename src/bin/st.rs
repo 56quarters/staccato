@@ -51,17 +51,29 @@ fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
              .help(
                  "Comma separated list of percentiles (from 1 to 99, \
                   inclusive) that should have metrics computed. Default \
-                  is 75, 90, 95, and 99.")
-             .takes_value(true))
+                  is not to compute metrics for any specific percentiles, \
+                  only the global metrics.")
+             .takes_value(true)
+             .validator(validate_percents))
         .get_matches_from(args)
 }
 
 
-fn get_percents(pcnt: &str) -> Vec<u8> {
-    pcnt.split(",")
-        .flat_map(|v| v.parse::<u8>().ok())
-        .filter(|&v| v > 0 && v < 100)
-        .collect()
+fn validate_percents(v: String) -> Result<(), String> {
+    for p in v.split(",") {
+        let p_as_u8 = match p.parse::<u8>() {
+            Ok(i) => i,
+            Err(_) => {
+                return Err("Invalid percentile value".to_string());
+            }
+        };
+
+        if p_as_u8 < 1 || p_as_u8 > 99 {
+            return Err("Invalid percentile value".to_string());
+        }
+    }
+
+    Ok(())
 }
 
 
@@ -69,10 +81,11 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let matches = parse_cli_opts(args);
 
-    // TODO: Handle cases where people want to turn off percentiles
-    // TODO: Handle validation of this via clap
-    let percents: Vec<u8> = if let Some(p) = matches.value_of("p") {
-        get_percents(p)
+    let percents: Vec<u8> = if let Some(p) = matches.values_of("percentiles") {
+        p
+            .flat_map(|v| v.parse::<u8>().ok())
+            .filter(|&v| v >= 1 && v <= 99)
+            .collect()
     } else {
         Vec::from(DEFAULT_PERCENTILES)
     };
