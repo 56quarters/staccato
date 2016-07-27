@@ -25,26 +25,28 @@ use std::io::{stdin, BufReader};
 use clap::{Arg, App, ArgMatches};
 use staccato::StatisticsBundle;
 
+
 const DEFAULT_PERCENTILES: &'static [u8] = &[];
+const DEFAULT_TERM_WIDTH: usize = 72;
 
 
 fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
     App::new("Staccato")
         .version(crate_version!())
-        // TODO: Newlines look bad on the CLI
-        .about(
-            "Staccato is a program for generating statistics from a stream \
-             of numbers from the command line. It reads values from STDIN \
-             until the end of the stream (or file being piped in) and computes \
-             things about them such as the median, mean, standard deviation, \
-             and much more.\
-             \n\n\
-             It also computes these things for certain portions of the stream. \
-             By default it will compute statistics for the entire stream, the \
-             lower 75% of values, the lower 90% of values, the lower 95% of \
-             values, and the lower 99% of values.\
-             \n\n\
-             If you've ever used Statsd, the format should seem familiar :)")
+        .set_term_width(DEFAULT_TERM_WIDTH)
+        .after_help("\
+Staccato is a program for generating statistics from a stream \
+of numbers from the command line. It reads values from STDIN \
+until the end of the stream (or file being piped in) and computes \
+things about them such as the median, mean, standard deviation, \
+and much more.
+
+By default it will compute statistics for the entire stream. You can \
+have it additionally compute statistics for some subset of the values \
+of the stream. For example, using the argument `-p 25,50` would compute \
+statistics for the lower 25% of values, and lower 50% of values.
+
+If you've ever used Statsd, the format should seem familiar :)")
         .arg(Arg::with_name("percentiles")
              .short("p")
              .long("percentiles")
