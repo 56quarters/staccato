@@ -29,7 +29,6 @@ pub const NL: &'static str = "\r\n";
 pub const NL: &'static str = "\n";
 
 
-
 pub fn get_sorted_values<T: BufRead>(reader: T) -> Vec<f64> {
     let mut vals: Vec<f64> = reader.lines()
         .flat_map(|v| v.ok())
@@ -76,8 +75,6 @@ impl StatisticsBundle {
 }
 
 
-///
-///
 #[derive(Debug)]
 pub struct Statistics {
     percentile: Option<u8>,
@@ -92,9 +89,6 @@ pub struct Statistics {
 
 
 impl Statistics {
-    ///
-    ///
-    ///
     pub fn from(vals: &[f64], percentile: Option<u8>) -> Statistics {
         let filtered = if let Some(v) = percentile {
             Self::slice_values(vals, v)
@@ -102,6 +96,9 @@ impl Statistics {
             vals
         };
 
+        // Bail early when there are no values so that we don't have
+        // to handle the 0 case in all the methods to compute stats
+        // below.
         if filtered.len() == 0 {
             return Statistics::default();
         }
@@ -124,37 +121,30 @@ impl Statistics {
         }
     }
 
-    ///
     pub fn percentile(&self) -> Option<u8> {
         self.percentile
     }
 
-    ///
     pub fn count(&self) -> usize {
         self.count
     }
 
-    ///
     pub fn sum(&self) -> f64 {
         self.sum
     }
 
-    ///
     pub fn mean(&self) -> f64 {
         self.mean
     }
 
-    ///
     pub fn upper(&self) -> f64 {
         self.upper
     }
 
-    ///
     pub fn lower(&self) -> f64 {
         self.lower
     }
 
-    ///
     pub fn median(&self) -> f64 {
         self.median
     }
@@ -163,14 +153,12 @@ impl Statistics {
         self.stddev
     }
 
-    ///
     fn slice_values(vals: &[f64], percentile: u8) -> &[f64] {
         let num_vals = vals.len();
         let index = (percentile as usize * num_vals) / 100;
         &vals[0..index]
     }
 
-    ///
     fn compute_median(vals: &[f64]) -> f64 {
         let len = vals.len();
         let is_odd = len % 2 == 1;
@@ -198,6 +186,9 @@ impl Statistics {
         let mut lower = std::f64::MAX;
         let mut sum = 0f64;
 
+        // Compute min, max, and sum in the same method to avoid
+        // extra loops through all the values. Thus we only do two
+        // loops, this one and the standard deviation loop.
         for &val in vals {
             if val > upper {
                 upper = val;
