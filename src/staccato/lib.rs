@@ -20,7 +20,7 @@
 use std::fmt;
 use std::cmp::Ordering;
 use std::io::BufRead;
-
+use std::fmt::Write;
 
 pub fn get_sorted_values<T: BufRead>(reader: T) -> Vec<f64> {
     let mut vals: Vec<f64> = reader.lines()
@@ -240,27 +240,27 @@ impl Default for Statistics {
 
 impl fmt::Display for Statistics {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // Should these are write to a String buffer and
-        // then write to `f` in a single write?
+        let mut buf = String::new();
+
         if let Some(p) = self.percentile {
-            try!(writeln!(f, "count_{}: {}", p, self.count()));
-            try!(writeln!(f, "sum_{}: {}", p, self.sum()));
-            try!(writeln!(f, "mean_{}: {}", p, self.mean()));
-            try!(writeln!(f, "upper_{}: {}", p, self.upper()));
-            try!(writeln!(f, "lower_{}: {}", p, self.lower()));
-            try!(writeln!(f, "median_{}: {}", p, self.median()));
-            try!(writeln!(f, "stddev_{}: {}", p, self.stddev()));
+            writeln!(buf, "count_{}: {}", p, self.count()).unwrap();
+            writeln!(buf, "sum_{}: {}", p, self.sum()).unwrap();
+            writeln!(buf, "mean_{}: {}", p, self.mean()).unwrap();
+            writeln!(buf, "upper_{}: {}", p, self.upper()).unwrap();
+            writeln!(buf, "lower_{}: {}", p, self.lower()).unwrap();
+            writeln!(buf, "median_{}: {}", p, self.median()).unwrap();
+            writeln!(buf, "stddev_{}: {}", p, self.stddev()).unwrap();
         } else {
-            try!(writeln!(f, "count: {}", self.count()));
-            try!(writeln!(f, "sum: {}", self.sum()));
-            try!(writeln!(f, "mean: {}", self.mean()));
-            try!(writeln!(f, "upper: {}", self.upper()));
-            try!(writeln!(f, "lower: {}", self.lower()));
-            try!(writeln!(f, "median: {}", self.median()));
-            try!(writeln!(f, "stddev: {}", self.stddev()));
+            writeln!(buf, "count: {}", self.count()).unwrap();
+            writeln!(buf, "sum: {}", self.sum()).unwrap();
+            writeln!(buf, "mean: {}", self.mean()).unwrap();
+            writeln!(buf, "upper: {}", self.upper()).unwrap();
+            writeln!(buf, "lower: {}", self.lower()).unwrap();
+            writeln!(buf, "median: {}", self.median()).unwrap();
+            writeln!(buf, "stddev: {}", self.stddev()).unwrap();
         }
 
-        Ok(())
+        buf.fmt(f)
     }
 }
 
