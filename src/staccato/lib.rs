@@ -240,22 +240,24 @@ impl Default for Statistics {
 
 impl fmt::Display for Statistics {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Should these are write to a String buffer and
+        // then write to `f` in a single write?
         if let Some(p) = self.percentile {
-            try!(write!(f, "count_{}: {}\n", p, self.count()));
-            try!(write!(f, "sum_{}: {}\n", p, self.sum()));
-            try!(write!(f, "mean_{}: {}\n", p, self.mean()));
-            try!(write!(f, "upper_{}: {}\n", p, self.upper()));
-            try!(write!(f, "lower_{}: {}\n", p, self.lower()));
-            try!(write!(f, "median_{}: {}\n", p, self.median()));
-            try!(write!(f, "stddev_{}: {}\n", p, self.stddev()));
+            try!(writeln!(f, "count_{}: {}", p, self.count()));
+            try!(writeln!(f, "sum_{}: {}", p, self.sum()));
+            try!(writeln!(f, "mean_{}: {}", p, self.mean()));
+            try!(writeln!(f, "upper_{}: {}", p, self.upper()));
+            try!(writeln!(f, "lower_{}: {}", p, self.lower()));
+            try!(writeln!(f, "median_{}: {}", p, self.median()));
+            try!(writeln!(f, "stddev_{}: {}", p, self.stddev()));
         } else {
-            try!(write!(f, "count: {}\n", self.count()));
-            try!(write!(f, "sum: {}\n", self.sum()));
-            try!(write!(f, "mean: {}\n", self.mean()));
-            try!(write!(f, "upper: {}\n", self.upper()));
-            try!(write!(f, "lower: {}\n", self.lower()));
-            try!(write!(f, "median: {}\n", self.median()));
-            try!(write!(f, "stddev: {}\n", self.stddev()));
+            try!(writeln!(f, "count: {}", self.count()));
+            try!(writeln!(f, "sum: {}", self.sum()));
+            try!(writeln!(f, "mean: {}", self.mean()));
+            try!(writeln!(f, "upper: {}", self.upper()));
+            try!(writeln!(f, "lower: {}", self.lower()));
+            try!(writeln!(f, "median: {}", self.median()));
+            try!(writeln!(f, "stddev: {}", self.stddev()));
         }
 
         Ok(())

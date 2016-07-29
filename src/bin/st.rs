@@ -101,6 +101,7 @@ fn main() {
             print!("{}", s)
         }
     } else {
-        let _ = write!(stderr(), "No values to compute stats for\n");
+        // use clap error format here?
+        let _ = writeln!(stderr(), "No values to compute stats for");
     }
 }
