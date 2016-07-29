@@ -20,10 +20,10 @@ extern crate staccato;
 #[macro_use] extern crate clap;
 
 use std::env;
-use std::io::{stdin, BufReader};
+use std::io::{stdin, stderr, BufReader, Write};
 
 use clap::{Arg, App, ArgMatches};
-use staccato::StatisticsBundle;
+use staccato::{NL, StatisticsBundle};
 
 
 const DEFAULT_PERCENTILES: &'static [u8] = &[];
@@ -95,8 +95,12 @@ fn main() {
     let reader = BufReader::new(stdin());
     let stats = StatisticsBundle::from_reader(reader, &percents);
 
-    print!("{}", stats.global_stats());
-    for s in stats.percentile_stats() {
-        print!("{}", s)
+    if let Some(v) = stats {
+        print!("{}", v.global_stats());
+        for s in v.percentile_stats() {
+            print!("{}", s)
+        }
+    } else {
+        let _ = write!(stderr(), "No values to compute stats for{}", NL);
     }
 }

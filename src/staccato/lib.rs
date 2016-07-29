@@ -48,21 +48,29 @@ pub struct StatisticsBundle {
 
 
 impl StatisticsBundle {
-    pub fn from_reader<T: BufRead>(reader: T, percentiles: &[u8]) -> StatisticsBundle {
+    pub fn from_reader<T: BufRead>(reader: T, percentiles: &[u8])
+                                   -> Option<StatisticsBundle>
+    {
         let vals = get_sorted_values(reader);
         Self::from_sorted(&vals, percentiles)
     }
 
-    pub fn from_sorted(vals: &[f64], percentiles: &[u8]) -> StatisticsBundle {
+    pub fn from_sorted(vals: &[f64], percentiles: &[u8])
+                       -> Option<StatisticsBundle>
+    {
+        if vals.len() == 0 {
+            return None;
+        }
+
         let global_stats = Statistics::from(vals, None);
         let percentile_stats = percentiles.iter()
             .map(|&p| Statistics::from(vals, Some(p)))
             .collect();
 
-        StatisticsBundle {
+        Some(StatisticsBundle {
             global: global_stats,
             percentiles: percentile_stats,
-        }
+        })
     }
 
     pub fn global_stats(&self) -> &Statistics {
@@ -100,7 +108,7 @@ impl Statistics {
         // to handle the 0 case in all the methods to compute stats
         // below.
         if filtered.len() == 0 {
-            return Statistics::default();
+            return Statistics::empty_from_percentile(percentile);
         }
 
         let count = filtered.len();
@@ -151,6 +159,19 @@ impl Statistics {
 
     pub fn stddev(&self) -> f64 {
         self.stddev
+    }
+
+    fn empty_from_percentile(p: Option<u8>) -> Statistics {
+        Statistics {
+            percentile: p,
+            count: 0,
+            sum: 0f64,
+            mean: 0f64,
+            upper: 0f64,
+            lower: 0f64,
+            median: 0f64,
+            stddev: 0f64,
+        }
     }
 
     fn slice_values(vals: &[f64], percentile: u8) -> &[f64] {
@@ -219,16 +240,7 @@ impl Statistics {
 
 impl Default for Statistics {
     fn default() -> Statistics {
-        Statistics {
-            percentile: None,
-            count: 0,
-            sum: 0f64,
-            mean: 0f64,
-            upper: 0f64,
-            lower: 0f64,
-            median: 0f64,
-            stddev: 0f64,
-        }
+        Self::empty_from_percentile(None)
     }
 }
 
