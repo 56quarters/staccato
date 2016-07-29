@@ -22,13 +22,6 @@ use std::cmp::Ordering;
 use std::io::BufRead;
 
 
-#[cfg(windows)]
-pub const NL: &'static str = "\r\n";
-
-#[cfg(not(windows))]
-pub const NL: &'static str = "\n";
-
-
 pub fn get_sorted_values<T: BufRead>(reader: T) -> Vec<f64> {
     let mut vals: Vec<f64> = reader.lines()
         .flat_map(|v| v.ok())
@@ -248,21 +241,21 @@ impl Default for Statistics {
 impl fmt::Display for Statistics {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Some(p) = self.percentile {
-            try!(write!(f, "count_{}: {}{}", p, self.count(), NL));
-            try!(write!(f, "sum_{}: {}{}", p, self.sum(), NL));
-            try!(write!(f, "mean_{}: {}{}", p, self.mean(), NL));
-            try!(write!(f, "upper_{}: {}{}", p, self.upper(), NL));
-            try!(write!(f, "lower_{}: {}{}", p, self.lower(), NL));
-            try!(write!(f, "median_{}: {}{}", p, self.median(), NL));
-            try!(write!(f, "stddev_{}: {}{}", p, self.stddev(), NL));
+            try!(write!(f, "count_{}: {}\n", p, self.count()));
+            try!(write!(f, "sum_{}: {}\n", p, self.sum()));
+            try!(write!(f, "mean_{}: {}\n", p, self.mean()));
+            try!(write!(f, "upper_{}: {}\n", p, self.upper()));
+            try!(write!(f, "lower_{}: {}\n", p, self.lower()));
+            try!(write!(f, "median_{}: {}\n", p, self.median()));
+            try!(write!(f, "stddev_{}: {}\n", p, self.stddev()));
         } else {
-            try!(write!(f, "count: {}{}", self.count(), NL));
-            try!(write!(f, "sum: {}{}", self.sum(), NL));
-            try!(write!(f, "mean: {}{}", self.mean(), NL));
-            try!(write!(f, "upper: {}{}", self.upper(), NL));
-            try!(write!(f, "lower: {}{}", self.lower(), NL));
-            try!(write!(f, "median: {}{}", self.median(), NL));
-            try!(write!(f, "stddev: {}{}", self.stddev(), NL));
+            try!(write!(f, "count: {}\n", self.count()));
+            try!(write!(f, "sum: {}\n", self.sum()));
+            try!(write!(f, "mean: {}\n", self.mean()));
+            try!(write!(f, "upper: {}\n", self.upper()));
+            try!(write!(f, "lower: {}\n", self.lower()));
+            try!(write!(f, "median: {}\n", self.median()));
+            try!(write!(f, "stddev: {}\n", self.stddev()));
         }
 
         Ok(())

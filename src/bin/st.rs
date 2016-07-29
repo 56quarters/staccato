@@ -23,7 +23,7 @@ use std::env;
 use std::io::{stdin, stderr, BufReader, Write};
 
 use clap::{Arg, App, ArgMatches};
-use staccato::{NL, StatisticsBundle};
+use staccato::StatisticsBundle;
 
 
 const DEFAULT_PERCENTILES: &'static [u8] = &[];
@@ -101,6 +101,6 @@ fn main() {
             print!("{}", s)
         }
     } else {
-        let _ = write!(stderr(), "No values to compute stats for{}", NL);
+        let _ = write!(stderr(), "No values to compute stats for\n");
     }
 }
