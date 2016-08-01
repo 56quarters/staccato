@@ -20,10 +20,12 @@ extern crate staccato;
 #[macro_use] extern crate clap;
 
 use std::env;
+use std::fs::File;
 use std::io::{stdin, stderr, BufReader, Write};
+use std::process;
 
 use clap::{Arg, App, ArgMatches};
-use staccato::StatisticsBundle;
+use staccato::{get_sorted_values, StatisticsBundle};
 
 
 const DEFAULT_PERCENTILES: &'static [u8] = &[];
@@ -36,8 +38,8 @@ fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
         .set_term_width(DEFAULT_TERM_WIDTH)
         .after_help("\
 Staccato is a program for generating statistics from a stream \
-of numbers from the command line. It reads values from STDIN \
-until the end of the stream (or file being piped in) and computes \
+of numbers from the command line. It reads values from a file or \
+standard input until the end of the stream (or file) and computes \
 things about them such as the median, mean, standard deviation, \
 and much more.
 
@@ -57,6 +59,14 @@ If you've ever used Statsd, the format should seem familiar :)")
                   only the global metrics.")
              .takes_value(true)
              .validator(validate_percents))
+        // Note that we aren't using any validators for the file input. We'll
+        // just try to open it and see what happens. Otherwise we become susceptible
+        // to race conditions.
+        .arg(Arg::with_name("file")
+             .help(
+                 "Optional file to read values to from. If not supplied \
+                  values will be read from standard input.")
+             .index(1))
         .get_matches_from(args)
 }
 
@@ -92,8 +102,22 @@ fn main() {
         Vec::from(DEFAULT_PERCENTILES)
     };
 
-    let reader = BufReader::new(stdin());
-    let stats = StatisticsBundle::from_reader(reader, &percents);
+    let lines = if let Some(f) = matches.value_of("file") {
+        // If we've been given a file argument, try to open it and read
+        // values out of it. If we can't for any reason, just given up and
+        // exit now.
+        match File::open(f) {
+            Ok(handle) => get_sorted_values(BufReader::new(handle)),
+            Err(e) => {
+                let _ = writeln!(stderr(), "Cannot open file: {}", e);
+                process::exit(1);
+            }
+        }
+    } else {
+        get_sorted_values(BufReader::new(stdin()))
+    };
+
+    let stats = StatisticsBundle::from_sorted(&lines, &percents);
 
     if let Some(v) = stats {
         print!("{}", v.global_stats());

@@ -41,13 +41,6 @@ pub struct StatisticsBundle {
 
 
 impl StatisticsBundle {
-    pub fn from_reader<T: BufRead>(reader: T, percentiles: &[u8])
-                                   -> Option<StatisticsBundle>
-    {
-        let vals = get_sorted_values(reader);
-        Self::from_sorted(&vals, percentiles)
-    }
-
     pub fn from_sorted(vals: &[f64], percentiles: &[u8])
                        -> Option<StatisticsBundle>
     {
