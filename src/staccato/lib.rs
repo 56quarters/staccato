@@ -22,6 +22,7 @@ use std::cmp::Ordering;
 use std::io::BufRead;
 use std::fmt::Write;
 
+
 pub fn get_sorted_values<T: BufRead>(reader: T) -> Vec<f64> {
     let mut vals: Vec<f64> = reader.lines()
         .flat_map(|v| v.ok())

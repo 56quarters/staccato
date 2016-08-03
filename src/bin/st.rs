@@ -43,10 +43,11 @@ standard input until the end of the stream (or file) and computes \
 things about them such as the median, mean, standard deviation, \
 and much more.
 
-By default it will compute statistics for the entire stream. You can \
-have it additionally compute statistics for some subset of the values \
-of the stream. For example, using the argument `-p 25,50` would compute \
-statistics for the lower 25% of values, and lower 50% of values.
+By default it will compute statistics for the entire stream. You \
+can have it additionally compute statistics for some subset of the \
+values of the stream. For example, using the argument `-p 25,50` \
+would compute statistics for the lower 25% of values, and lower 50% \
+of values.
 
 If you've ever used Statsd, the format should seem familiar :)")
         .arg(Arg::with_name("percentiles")
@@ -59,9 +60,9 @@ If you've ever used Statsd, the format should seem familiar :)")
                   only the global metrics.")
              .takes_value(true)
              .validator(validate_percents))
-        // Note that we aren't using any validators for the file input. We'll
-        // just try to open it and see what happens. Otherwise we become susceptible
-        // to race conditions.
+        // Note that we aren't using any validators for the file input.
+        // We'll just try to open it and see what happens. Otherwise we
+        // become susceptible to race conditions.
         .arg(Arg::with_name("file")
              .help(
                  "Optional file to read values to from. If not supplied \
@@ -94,8 +95,7 @@ fn main() {
     let matches = parse_cli_opts(args);
 
     let percents: Vec<u8> = if let Some(p) = matches.values_of("percentiles") {
-        p
-            .flat_map(|v| v.parse::<u8>().ok())
+        p.flat_map(|v| v.parse::<u8>().ok())
             .filter(|&v| v >= 1 && v <= 99)
             .collect()
     } else {
@@ -104,7 +104,7 @@ fn main() {
 
     let lines = if let Some(f) = matches.value_of("file") {
         // If we've been given a file argument, try to open it and read
-        // values out of it. If we can't for any reason, just given up and
+        // values out of it. If we can't for any reason, just give up and
         // exit now.
         match File::open(f) {
             Ok(handle) => get_sorted_values(BufReader::new(handle)),
@@ -118,7 +118,6 @@ fn main() {
     };
 
     let stats = StatisticsBundle::from_sorted(&lines, &percents);
-
     if let Some(v) = stats {
         print!("{}", v.global_stats());
         for s in v.percentile_stats() {

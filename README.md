@@ -6,10 +6,10 @@
 Statistics from the command line!
 
 Staccato (`st` for short) is a command line program that lets you compute
-statistics from numbers piped in via STDIN. It computes things about the
-stream of numbers like min, max, mean, median, and standard deviation. It
-can also compute these things about some subset of the stream, for example
-the lower 95% of values.
+statistics from values from a file or standard input. It computes things
+about the stream of numbers like min, max, mean, median, and standard
+deviation. It can also compute these things about some subset of the stream,
+for example the lower 95% of values.
 
 ## Features
 
