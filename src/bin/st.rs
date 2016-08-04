@@ -32,24 +32,29 @@ const DEFAULT_PERCENTILES: &'static [u8] = &[];
 const DEFAULT_TERM_WIDTH: usize = 72;
 
 
+// TODO: concat! ?
+
 fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
     App::new("Staccato")
         .version(crate_version!())
+        //.about("Statistics from the command line")
         .set_term_width(DEFAULT_TERM_WIDTH)
-        .after_help("\
-Staccato is a program for generating statistics from a stream \
-of numbers from the command line. It reads values from a file or \
-standard input until the end of the stream (or file) and computes \
-things about them such as the median, mean, standard deviation, \
-and much more.
-
-By default it will compute statistics for the entire stream. You \
-can have it additionally compute statistics for some subset of the \
-values of the stream. For example, using the argument `-p 25,50` \
-would compute statistics for the lower 25% of values, and lower 50% \
-of values.
-
-If you've ever used Statsd, the format should seem familiar :)")
+        .after_help(concat!(
+            "Staccato is a program for generating statistics from a stream ",
+            "of numbers from the command line. It reads values from a file or ",
+            "standard input until the end of the stream (or file) and computes ",
+            "things about them such as the median, mean, standard deviation, ",
+            "and much more.",
+            "\n ",
+            "\n ",
+            "By default it will compute statistics for the entire stream. You ",
+            "can have it additionally compute statistics for some subset of the ",
+            "values of the stream. For example, using the argument `-p 25,50` ",
+            "would compute statistics for the lower 25% of values, and lower 50% ",
+            "of values.",
+            "\n ",
+            "\n ",
+            "If you've ever used Statsd, the format should seem familiar :)"))
         .arg(Arg::with_name("percentiles")
              .short("p")
              .long("percentiles")
