@@ -37,7 +37,7 @@ const DEFAULT_TERM_WIDTH: usize = 72;
 fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
     App::new("Staccato")
         .version(crate_version!())
-        //.about("Statistics from the command line")
+        .about("\nStatistics from the command line!")
         .set_term_width(DEFAULT_TERM_WIDTH)
         .after_help(concat!(
             "Staccato is a program for generating statistics from a stream ",
@@ -51,27 +51,24 @@ fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
             "can have it additionally compute statistics for some subset of the ",
             "values of the stream. For example, using the argument `-p 25,50` ",
             "would compute statistics for the lower 25% of values, and lower 50% ",
-            "of values.",
-            "\n ",
-            "\n ",
-            "If you've ever used Statsd, the format should seem familiar :)"))
+            "of values."))
         .arg(Arg::with_name("percentiles")
              .short("p")
              .long("percentiles")
-             .help(
-                 "Comma separated list of percentiles (from 1 to 99, \
-                  inclusive) that should have metrics computed. Default \
-                  is not to compute metrics for any specific percentiles, \
-                  only the global metrics.")
+             .help(concat!(
+                 "Comma separated list of percentiles (from 1 to 99, ",
+                  "inclusive) that should have metrics computed. Default ",
+                  "is not to compute metrics for any specific percentiles, ",
+                  "only the global metrics."))
              .takes_value(true)
              .validator(validate_percents))
         // Note that we aren't using any validators for the file input.
         // We'll just try to open it and see what happens. Otherwise we
         // become susceptible to race conditions.
         .arg(Arg::with_name("file")
-             .help(
-                 "Optional file to read values to from. If not supplied \
-                  values will be read from standard input.")
+             .help(concat!(
+                 "Optional file to read values to from. If not supplied ",
+                  "values will be read from standard input."))
              .index(1))
         .get_matches_from(args)
 }
