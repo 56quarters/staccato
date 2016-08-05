@@ -23,6 +23,9 @@ use std::io::BufRead;
 use std::fmt::Write;
 
 
+const DISPLAY_PRECISION: usize = 5;
+
+
 pub fn get_sorted_values<T: BufRead>(reader: T) -> Vec<f64> {
     let mut vals: Vec<f64> = reader.lines()
         .flat_map(|v| v.ok())
@@ -237,21 +240,21 @@ impl fmt::Display for Statistics {
         let mut buf = String::new();
 
         if let Some(p) = self.percentile {
-            writeln!(buf, "count_{}: {}", p, self.count()).unwrap();
-            writeln!(buf, "sum_{}: {}", p, self.sum()).unwrap();
-            writeln!(buf, "mean_{}: {}", p, self.mean()).unwrap();
-            writeln!(buf, "upper_{}: {}", p, self.upper()).unwrap();
-            writeln!(buf, "lower_{}: {}", p, self.lower()).unwrap();
-            writeln!(buf, "median_{}: {}", p, self.median()).unwrap();
-            writeln!(buf, "stddev_{}: {}", p, self.stddev()).unwrap();
+            writeln!(buf, "count_{}: {:.*}", p, DISPLAY_PRECISION, self.count()).unwrap();
+            writeln!(buf, "sum_{}: {:.*}", p, DISPLAY_PRECISION, self.sum()).unwrap();
+            writeln!(buf, "mean_{}: {:.*}", p, DISPLAY_PRECISION, self.mean()).unwrap();
+            writeln!(buf, "upper_{}: {:.*}", p, DISPLAY_PRECISION, self.upper()).unwrap();
+            writeln!(buf, "lower_{}: {:.*}", p, DISPLAY_PRECISION, self.lower()).unwrap();
+            writeln!(buf, "median_{}: {:.*}", p, DISPLAY_PRECISION, self.median()).unwrap();
+            writeln!(buf, "stddev_{}: {:.*}", p, DISPLAY_PRECISION, self.stddev()).unwrap();
         } else {
-            writeln!(buf, "count: {}", self.count()).unwrap();
-            writeln!(buf, "sum: {}", self.sum()).unwrap();
-            writeln!(buf, "mean: {}", self.mean()).unwrap();
-            writeln!(buf, "upper: {}", self.upper()).unwrap();
-            writeln!(buf, "lower: {}", self.lower()).unwrap();
-            writeln!(buf, "median: {}", self.median()).unwrap();
-            writeln!(buf, "stddev: {}", self.stddev()).unwrap();
+            writeln!(buf, "count: {:.*}", DISPLAY_PRECISION, self.count()).unwrap();
+            writeln!(buf, "sum: {:.*}", DISPLAY_PRECISION, self.sum()).unwrap();
+            writeln!(buf, "mean: {:.*}", DISPLAY_PRECISION, self.mean()).unwrap();
+            writeln!(buf, "upper: {:.*}", DISPLAY_PRECISION, self.upper()).unwrap();
+            writeln!(buf, "lower: {:.*}", DISPLAY_PRECISION, self.lower()).unwrap();
+            writeln!(buf, "median: {:.*}", DISPLAY_PRECISION, self.median()).unwrap();
+            writeln!(buf, "stddev: {:.*}", DISPLAY_PRECISION, self.stddev()).unwrap();
         }
 
         buf.fmt(f)
