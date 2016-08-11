@@ -25,10 +25,11 @@ use std::io::{stdin, stderr, BufReader, Write};
 use std::process;
 
 use clap::{Arg, App, ArgMatches};
-use staccato::{get_sorted_values, StatisticsBundle};
+use staccato::{get_sorted_values, StatisticsBundle, StatisticsFormatter, KeyValueSep};
 
 
 const DEFAULT_PERCENTILES: &'static [u8] = &[];
+const DEFAULT_SEPARATOR: KeyValueSep = KeyValueSep::Colon;
 const DEFAULT_TERM_WIDTH: usize = 72;
 
 
@@ -59,6 +60,18 @@ fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
                   "only the global metrics."))
              .takes_value(true)
              .validator(validate_percents))
+        .arg(Arg::with_name("separator")
+             .short("s")
+             .long("separator")
+             .help(concat!(
+                 "Type of separator to use when printing keys and values. ",
+                 "Possible values for this option are the literal string ",
+                 "'tab' for the tab character, the literal string 'colon' ",
+                 "for a colon and space, or any other string to use that ",
+                 "as a separator. For example you could use the string ",
+                 "' => ' as a separator. Default is to use a colon and a ",
+                 "space."))
+             .takes_value(true))
         // Note that we aren't using any validators for the file input.
         // We'll just try to open it and see what happens. Otherwise we
         // become susceptible to race conditions.
@@ -93,13 +106,13 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let matches = parse_cli_opts(args);
 
-    let percents: Vec<u8> = if let Some(p) = matches.values_of("percentiles") {
-        p.flat_map(|v| v.parse::<u8>().ok())
-            .filter(|&v| v >= 1 && v <= 99)
-            .collect()
-    } else {
+    let percents: Vec<u8> = values_t!(matches, "percentiles", u8).unwrap_or(
         Vec::from(DEFAULT_PERCENTILES)
-    };
+    );
+
+    let separator: KeyValueSep = value_t!(matches, "separator", KeyValueSep).unwrap_or(
+        DEFAULT_SEPARATOR
+    );
 
     let lines = if let Some(f) = matches.value_of("file") {
         // If we've been given a file argument, try to open it and read
@@ -108,7 +121,7 @@ fn main() {
         match File::open(f) {
             Ok(handle) => get_sorted_values(BufReader::new(handle)),
             Err(e) => {
-                let _ = writeln!(stderr(), "Cannot open file: {}", e);
+                let _ = writeln!(stderr(), "error: Cannot open file: {}", e);
                 process::exit(1);
             }
         }
@@ -118,10 +131,7 @@ fn main() {
 
     let stats = StatisticsBundle::from_sorted(&lines, &percents);
     if let Some(v) = stats {
-        print!("{}", v.global_stats());
-        for s in v.percentile_stats() {
-            print!("{}", s)
-        }
+        print!("{}", StatisticsFormatter::with_sep(&v, separator));
     } else {
         // use clap error format here?
         let _ = writeln!(stderr(), "No values to compute stats for");

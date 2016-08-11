@@ -21,6 +21,7 @@ use std::fmt;
 use std::cmp::Ordering;
 use std::io::BufRead;
 use std::fmt::Write;
+use std::str::FromStr;
 
 
 const DISPLAY_PRECISION: usize = 5;
@@ -38,6 +39,7 @@ pub fn get_sorted_values<T: BufRead>(reader: T) -> Vec<f64> {
 }
 
 
+#[derive(Debug)]
 pub struct StatisticsBundle {
     global: Statistics,
     percentiles: Vec<Statistics>,
@@ -235,26 +237,97 @@ impl Default for Statistics {
 }
 
 
-impl fmt::Display for Statistics {
+#[derive(PartialEq, Debug, Clone)]
+pub struct KeyValueParseError(());
+
+
+#[derive(PartialEq, Eq, Debug, Hash, Clone)]
+pub enum KeyValueSep {
+    Tab,
+    Colon,
+    Other(String),
+}
+
+
+impl KeyValueSep {
+    fn get_sep(&self) -> &str {
+        match self {
+            &KeyValueSep::Tab => "\t",
+            &KeyValueSep::Colon => ": ",
+            &KeyValueSep::Other(ref s) => s,
+        }
+    }
+}
+
+
+impl fmt::Display for KeyValueSep {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.get_sep().fmt(f)
+    }
+}
+
+
+impl FromStr for KeyValueSep {
+    type Err = KeyValueParseError;
+
+    fn from_str(s: &str) -> Result<KeyValueSep, Self::Err> {
+        if "tab" == s {
+            Ok(KeyValueSep::Tab)
+        } else if "colon" == s {
+            Ok(KeyValueSep::Colon)
+        } else {
+            Ok(KeyValueSep::Other(s.to_string()))
+        }
+    }
+}
+
+
+pub struct StatisticsFormatter<'a> {
+    bundle: &'a StatisticsBundle,
+    sep: KeyValueSep,
+}
+
+
+impl<'a> StatisticsFormatter<'a> {
+    pub fn new(bundle: &'a StatisticsBundle) -> StatisticsFormatter<'a> {
+        Self::with_sep(bundle, KeyValueSep::Colon)
+    }
+
+    pub fn with_sep(bundle: &'a StatisticsBundle, sep: KeyValueSep) -> StatisticsFormatter<'a> {
+        StatisticsFormatter { bundle: bundle, sep: sep }
+    }
+
+    fn write_to_buf<T: Write>(buf: &mut T, stats: &Statistics, sep: &KeyValueSep) {
+        if let Some(p) = stats.percentile() {
+            writeln!(buf, "count_{}{}{:.*}", p, sep, DISPLAY_PRECISION, stats.count()).unwrap();
+            writeln!(buf, "sum_{}{}{:.*}", p, sep, DISPLAY_PRECISION, stats.sum()).unwrap();
+            writeln!(buf, "mean_{}{}{:.*}", p, sep, DISPLAY_PRECISION, stats.mean()).unwrap();
+            writeln!(buf, "upper_{}{}{:.*}", p, sep, DISPLAY_PRECISION, stats.upper()).unwrap();
+            writeln!(buf, "lower_{}{}{:.*}", p, sep, DISPLAY_PRECISION, stats.lower()).unwrap();
+            writeln!(buf, "median_{}{}{:.*}", p, sep, DISPLAY_PRECISION, stats.median()).unwrap();
+            writeln!(buf, "stddev_{}{}{:.*}", p, sep, DISPLAY_PRECISION, stats.stddev()).unwrap();
+        } else {
+            writeln!(buf, "count{}{:.*}", sep, DISPLAY_PRECISION, stats.count()).unwrap();
+            writeln!(buf, "sum{}{:.*}", sep, DISPLAY_PRECISION, stats.sum()).unwrap();
+            writeln!(buf, "mean{}{:.*}", sep, DISPLAY_PRECISION, stats.mean()).unwrap();
+            writeln!(buf, "upper{}{:.*}", sep, DISPLAY_PRECISION, stats.upper()).unwrap();
+            writeln!(buf, "lower{}{:.*}", sep, DISPLAY_PRECISION, stats.lower()).unwrap();
+            writeln!(buf, "median{}{:.*}", sep, DISPLAY_PRECISION, stats.median()).unwrap();
+            writeln!(buf, "stddev{}{:.*}", sep, DISPLAY_PRECISION, stats.stddev()).unwrap();
+        }
+    }
+}
+
+
+impl<'a> fmt::Display for StatisticsFormatter<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut buf = String::new();
 
-        if let Some(p) = self.percentile {
-            writeln!(buf, "count_{}: {:.*}", p, DISPLAY_PRECISION, self.count()).unwrap();
-            writeln!(buf, "sum_{}: {:.*}", p, DISPLAY_PRECISION, self.sum()).unwrap();
-            writeln!(buf, "mean_{}: {:.*}", p, DISPLAY_PRECISION, self.mean()).unwrap();
-            writeln!(buf, "upper_{}: {:.*}", p, DISPLAY_PRECISION, self.upper()).unwrap();
-            writeln!(buf, "lower_{}: {:.*}", p, DISPLAY_PRECISION, self.lower()).unwrap();
-            writeln!(buf, "median_{}: {:.*}", p, DISPLAY_PRECISION, self.median()).unwrap();
-            writeln!(buf, "stddev_{}: {:.*}", p, DISPLAY_PRECISION, self.stddev()).unwrap();
-        } else {
-            writeln!(buf, "count: {:.*}", DISPLAY_PRECISION, self.count()).unwrap();
-            writeln!(buf, "sum: {:.*}", DISPLAY_PRECISION, self.sum()).unwrap();
-            writeln!(buf, "mean: {:.*}", DISPLAY_PRECISION, self.mean()).unwrap();
-            writeln!(buf, "upper: {:.*}", DISPLAY_PRECISION, self.upper()).unwrap();
-            writeln!(buf, "lower: {:.*}", DISPLAY_PRECISION, self.lower()).unwrap();
-            writeln!(buf, "median: {:.*}", DISPLAY_PRECISION, self.median()).unwrap();
-            writeln!(buf, "stddev: {:.*}", DISPLAY_PRECISION, self.stddev()).unwrap();
+        let global_stats = self.bundle.global_stats();
+        Self::write_to_buf(&mut buf, global_stats, &self.sep);
+
+        for stats in self.bundle.percentile_stats() {
+            Self::write_to_buf(&mut buf, stats, &self.sep);
         }
 
         buf.fmt(f)
