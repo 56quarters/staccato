@@ -337,7 +337,7 @@ impl<'a> fmt::Display for StatisticsFormatter<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::Statistics;
+    use super::{Statistics, KeyValueSep};
 
     const VALUES: &'static [f64] = &[
         1f64, 2f64, 5f64, 7f64, 9f64, 12f64
@@ -513,5 +513,27 @@ mod tests {
     fn test_statistics_single_value_stddev() {
         let stats = Statistics::from(SINGLE, None);
         assert_eq!(0f64, stats.stddev());
+    }
+
+    #[test]
+    fn test_key_value_sep_get_sep() {
+        assert_eq!("\t", KeyValueSep::Tab.get_sep());
+        assert_eq!(": ", KeyValueSep::Colon.get_sep());
+        assert_eq!(" => ", KeyValueSep::Other(" => ".to_string()).get_sep());
+    }
+
+    #[test]
+    fn test_key_value_sep_display() {
+        assert_eq!("\t".to_string(), format!("{}", KeyValueSep::Tab));
+        assert_eq!(": ".to_string(), format!("{}", KeyValueSep::Colon));
+        assert_eq!(" => ".to_string(), format!("{}", KeyValueSep::Other(" => ".to_string())));
+    }
+
+    #[test]
+    fn test_key_value_sep_from_str() {
+        assert_eq!(KeyValueSep::Tab, "tab".parse::<KeyValueSep>().unwrap());
+        assert_eq!(KeyValueSep::Colon, "colon".parse::<KeyValueSep>().unwrap());
+        assert_eq!(KeyValueSep::Other(" => ".to_string()), " => ".parse::<KeyValueSep>().unwrap());
+
     }
 }
