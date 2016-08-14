@@ -111,7 +111,7 @@ fn main() {
     );
 
     let separator: KeyValueSep = value_t!(matches, "separator", KeyValueSep).unwrap_or(
-        DEFAULT_SEPARATOR
+        DEFAULT_SEPARATOR.clone()
     );
 
     let lines = if let Some(f) = matches.value_of("file") {
@@ -134,6 +134,6 @@ fn main() {
         print!("{}", StatisticsFormatter::with_sep(&v, separator));
     } else {
         // use clap error format here?
-        let _ = writeln!(stderr(), "No values to compute stats for");
+        let _ = writeln!(stderr(), "error: No values to compute stats for");
     }
 }
