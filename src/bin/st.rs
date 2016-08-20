@@ -25,7 +25,8 @@ use std::io::{stdin, stderr, BufReader, Write};
 use std::process;
 
 use clap::{Arg, App, ArgMatches};
-use staccato::{get_sorted_values, StatisticsBundle, StatisticsFormatter, KeyValueSep};
+use staccato::{get_sorted_values, StatisticsBundle, StatisticsFormatter,
+               KeyValueSep};
 
 
 const DEFAULT_PERCENTILES: &'static [u8] = &[];
@@ -114,19 +115,27 @@ fn main() {
         DEFAULT_SEPARATOR.clone()
     );
 
-    let lines = if let Some(f) = matches.value_of("file") {
+    let line_result = if let Some(f) = matches.value_of("file") {
         // If we've been given a file argument, try to open it and read
         // values out of it. If we can't for any reason, just give up and
         // exit now.
         match File::open(f) {
-            Ok(handle) => get_sorted_values(BufReader::new(handle)),
+            Ok(handle) => get_sorted_values(&mut BufReader::new(handle)),
             Err(e) => {
                 let _ = writeln!(stderr(), "error: Cannot open file: {}", e);
                 process::exit(1);
             }
         }
     } else {
-        get_sorted_values(BufReader::new(stdin()))
+        get_sorted_values(&mut BufReader::new(stdin()))
+    };
+
+    let lines = match line_result {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = writeln!(stderr(), "error: Could not parse values: {}", e);
+            process::exit(1);
+        }
     };
 
     let stats = StatisticsBundle::from_sorted(&lines, &percents);

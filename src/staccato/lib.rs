@@ -18,8 +18,9 @@
 
 
 use std::fmt;
+use std::io;
 use std::cmp::Ordering;
-use std::io::BufRead;
+use std::io::Read;
 use std::fmt::Write;
 use std::str::FromStr;
 
@@ -27,15 +28,16 @@ use std::str::FromStr;
 const DISPLAY_PRECISION: usize = 5;
 
 
-pub fn get_sorted_values<T: BufRead>(reader: T) -> Vec<f64> {
-    let mut vals: Vec<f64> = reader.lines()
-        .flat_map(|v| v.ok())
+pub fn get_sorted_values<T: Read>(reader: &mut T) -> Result<Vec<f64>, io::Error> {
+    let mut buf = String::new();
+    try!(reader.read_to_string(&mut buf));
+
+    let mut values: Vec<f64> = buf.lines()
         .filter_map(|v| v.parse::<f64>().ok())
         .collect();
 
-    vals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
-
-    vals
+    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
+    Ok(values)
 }
 
 
@@ -217,7 +219,6 @@ impl Statistics {
         (lower, upper, sum)
     }
 
-
     fn compute_stddev(vals: &[f64], mean: f64) -> f64 {
         let num = vals.len() as f64;
         let sum_deviance = vals.iter().fold(0f64, |mut sum, &x| {
@@ -337,7 +338,8 @@ impl<'a> fmt::Display for StatisticsFormatter<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Statistics, KeyValueSep};
+    use std::io::Cursor;
+    use super::{get_sorted_values, Statistics, KeyValueSep};
 
     const VALUES: &'static [f64] = &[
         1f64, 2f64, 5f64, 7f64, 9f64, 12f64
@@ -346,6 +348,28 @@ mod tests {
     const SINGLE: &'static [f64] = &[13f64];
 
     const EMPTY: &'static [f64] = &[];
+
+    #[test]
+    fn test_get_sorted_values_filter_invalids() {
+        let bytes: Vec<u8> = vec!["asdf\n", "4.5\n", "xyz\n"].iter()
+            .flat_map(|v| v.as_bytes())
+            .map(|&v| v)
+            .collect();
+
+        let mut reader = Cursor::new(bytes);
+        assert_eq!(vec![4.5], get_sorted_values(&mut reader).unwrap());
+    }
+
+    #[test]
+    fn test_get_sorted_values_ordered() {
+        let bytes: Vec<u8> = vec!["9.8\n", "4.5\n", "5.6\n"].iter()
+            .flat_map(|v| v.as_bytes())
+            .map(|&v| v)
+            .collect();
+
+        let mut reader = Cursor::new(bytes);
+        assert_eq!(vec![4.5, 5.6, 9.8], get_sorted_values(&mut reader).unwrap());
+    }
 
     #[test]
     fn test_statistics_full_values_count() {
