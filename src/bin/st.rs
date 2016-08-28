@@ -17,7 +17,8 @@
 //
 
 extern crate staccato;
-#[macro_use] extern crate clap;
+#[macro_use]
+extern crate clap;
 
 use std::env;
 use std::fs::File;
