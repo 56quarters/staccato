@@ -41,7 +41,7 @@ pub fn get_sorted_values<T: Read>(reader: &mut T) -> Result<Vec<f64>, io::Error>
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StatisticsBundle {
     global: Statistics,
     percentiles: Vec<Statistics>,
@@ -77,7 +77,7 @@ impl StatisticsBundle {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Statistics {
     percentile: Option<u8>,
     count: usize,
@@ -283,6 +283,7 @@ impl FromStr for KeyValueSep {
 }
 
 
+#[derive(Debug)]
 pub struct StatisticsFormatter<'a> {
     bundle: &'a StatisticsBundle,
     sep: KeyValueSep,
