@@ -11,10 +11,7 @@ install_rustup() {
 
 
 install_target() {
-    local default_target=`rustup target list | grep '(default)' | cut -d ' ' -f 1`
-    if [[ "${default_target}" != "${TARGET}" ]]; then
-        rustup target add $TARGET
-    fi
+    rustup target add $TARGET || true
 }
 
 
