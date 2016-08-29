@@ -3,6 +3,12 @@ name = "staccato"
 version = "0.1.0"
 authors = ["TSH Labs"]
 description = "Statistics from the command line"
+homepage = "https://github.com/tshlabs/staccato"
+repository = "https://github.com/tshlabs/staccato.git"
+readme = "README.md"
+license = "GPL-3.0+"
+keywords = ["statistics"]
+
 
 [dependencies]
 clap = "2.10.0"
