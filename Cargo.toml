@@ -7,7 +7,7 @@ homepage = "https://github.com/tshlabs/staccato"
 repository = "https://github.com/tshlabs/staccato.git"
 readme = "README.md"
 license = "GPL-3.0+"
-keywords = ["statistics"]
+keywords = ["statistics", "stats", "cli"]
 
 
 [dependencies]
