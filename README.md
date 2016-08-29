@@ -54,7 +54,7 @@ you have a file called `timings.log` that looks like this:
 To get statistics about those values, you'd run Staccato like this:
 
 ```
-$ st < timings.log
+$ st timings.log
 count: 9
 sum: 6.942797
 mean: 0.7714218888888889
