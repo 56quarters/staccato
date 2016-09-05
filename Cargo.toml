@@ -11,7 +11,7 @@ keywords = ["statistics", "stats", "cli"]
 
 
 [dependencies]
-clap = "2.10.0"
+clap = "2.11.0"
 
 [lib]
 name = "staccato"
