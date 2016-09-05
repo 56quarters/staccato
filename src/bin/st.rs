@@ -108,13 +108,13 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let matches = parse_cli_opts(args);
 
-    let percents: Vec<u8> = values_t!(matches, "percentiles", u8).unwrap_or(
+    let percents: Vec<u8> = values_t!(matches, "percentiles", u8).unwrap_or_else(|_| {
         Vec::from(DEFAULT_PERCENTILES)
-    );
+    });
 
-    let separator: KeyValueSep = value_t!(matches, "separator", KeyValueSep).unwrap_or(
+    let separator: KeyValueSep = value_t!(matches, "separator", KeyValueSep).unwrap_or_else(|_| {
         DEFAULT_SEPARATOR.clone()
-    );
+    });
 
     let line_result = if let Some(f) = matches.value_of("file") {
         // If we've been given a file argument, try to open it and read
