@@ -87,7 +87,7 @@ fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
 
 
 fn validate_percents(v: String) -> Result<(), String> {
-    for p in v.split(",") {
+    for p in v.split(',') {
         let p_as_u8 = match p.parse::<u8>() {
             Ok(i) => i,
             Err(_) => {

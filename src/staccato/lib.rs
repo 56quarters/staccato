@@ -178,22 +178,21 @@ impl Statistics {
         let len = vals.len();
         let is_odd = len % 2 == 1;
 
-        let median = if is_odd {
+        if is_odd {
             let mid = len / 2;
-            vals[mid]
-        } else {
-            let upper_med = len / 2;
-            let lower_med = upper_med - 1;
-            // It should never be the case that these indexes
-            // don't exist in the slice. If there's no entries
-            // we should have already just returned the default
-            // stats instance. If there's only one entry we
-            // would have handled that with the 'is_odd' case
-            // above. Otherwise this will do the right thing.
-            (vals[upper_med] + vals[lower_med]) / 2f64
-        };
+            return vals[mid];
+        }
 
-        median
+        let upper_med = len / 2;
+        let lower_med = upper_med - 1;
+        // It should never be the case that these indexes
+        // don't exist in the slice. If there's no entries
+        // we should have already just returned the default
+        // stats instance. If there's only one entry we
+        // would have handled that with the 'is_odd' case
+        // above. Otherwise this will do the right thing.
+        (vals[upper_med] + vals[lower_med]) / 2f64
+
     }
 
     fn compute_min_max_sum(vals: &[f64]) -> (f64, f64, f64) {
@@ -221,8 +220,8 @@ impl Statistics {
 
     fn compute_stddev(vals: &[f64], mean: f64) -> f64 {
         let num = vals.len() as f64;
-        let sum_deviance = vals.iter().fold(0f64, |mut sum, &x| {
-            sum = sum + (x - mean).powi(2); sum
+        let sum_deviance = vals.iter().fold(0f64, |sum, &x| {
+            sum + (x - mean).powi(2)
         });
 
         let deviance = sum_deviance / num;
@@ -252,10 +251,10 @@ pub enum KeyValueSep {
 
 impl KeyValueSep {
     fn get_sep(&self) -> &str {
-        match self {
-            &KeyValueSep::Tab => "\t",
-            &KeyValueSep::Colon => ": ",
-            &KeyValueSep::Other(ref s) => s,
+        match *self {
+            KeyValueSep::Tab => "\t",
+            KeyValueSep::Colon => ": ",
+            KeyValueSep::Other(ref s) => s,
         }
     }
 }
