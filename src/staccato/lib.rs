@@ -101,11 +101,11 @@ impl Statistics {
         // Bail early when there are no values so that we don't have
         // to handle the 0 case in all the methods to compute stats
         // below.
-        if filtered.len() == 0 {
+        let count = filtered.len();
+        if count == 0 {
             return Statistics::empty_from_percentile(percentile);
         }
 
-        let count = filtered.len();
         let (lower, upper, sum) = Self::compute_min_max_sum(filtered);
         let mean = sum / count as f64;
         let median = Self::compute_median(filtered);
