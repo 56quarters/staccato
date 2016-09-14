@@ -56,12 +56,12 @@ To get statistics about those values, you'd run Staccato like this:
 ```
 $ st timings.log
 count: 9
-sum: 6.942797
-mean: 0.7714218888888889
-upper: 1.677319
-lower: 0.147564
-median: 0.572124
-stddev: 0.5265074031965414
+sum: 6.94279
+mean: 0.77142
+upper: 1.67731
+lower: 0.14756
+median: 0.57212
+stddev: 0.52650
 ```
 
 ### Application Log File
@@ -87,11 +87,11 @@ application, you might use Staccato like this:
 ```
 $ tail -n 100 /var/log/my-application/access.log | cut -d ' ' -f 5 | st
 count: 100
-mean: 0.20346768999999995
+mean: 0.20346
 upper: 3.84639
-lower: 0.005766
-median: 0.021009
-stddev: 0.6087083786414262
+lower: 0.00577
+median: 0.02101
+stddev: 0.60871
 ```
 
 ## Documentation
