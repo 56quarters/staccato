@@ -88,16 +88,12 @@ fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
 
 fn validate_percents(v: String) -> Result<(), String> {
     for p in v.split(',') {
-        let p_as_u8 = match p.parse::<u8>() {
-            Ok(i) => i,
-            Err(_) => {
+        match p.parse::<u8>() {
+            Ok(i) if i > 0 && i <= 100 => i,
+            _ => {
                 return Err("Invalid percentile value".to_string());
             }
         };
-
-        if p_as_u8 < 1 || p_as_u8 > 99 {
-            return Err("Invalid percentile value".to_string());
-        }
     }
 
     Ok(())
