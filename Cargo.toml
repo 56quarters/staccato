@@ -22,3 +22,6 @@ name = "st"
 path = "src/bin/st.rs"
 doc = false
 test = false
+
+[badges]
+travis-ci = { repository = "tshlabs/staccato" }
