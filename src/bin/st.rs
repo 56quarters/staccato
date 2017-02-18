@@ -1,6 +1,6 @@
 // Staccato - Statistics from the command line
 //
-// Copyright 2016 TSH Labs
+// Copyright 2016-2017 TSH Labs
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ extern crate clap;
 
 use std::env;
 use std::fs::File;
-use std::io::{stdin, stderr, BufReader, Write};
+use std::io::{stdin, BufReader, Write};
 use std::process;
 
 use clap::{Arg, App, ArgMatches};
@@ -33,6 +33,14 @@ use staccato::{get_sorted_values, StatisticsBundle, StatisticsFormatter,
 const DEFAULT_PERCENTILES: &'static [u8] = &[];
 const DEFAULT_SEPARATOR: KeyValueSep = KeyValueSep::Colon;
 const DEFAULT_TERM_WIDTH: usize = 72;
+
+
+macro_rules! eprintln {
+    ($($arg:tt)*) => {{
+        let r = writeln!(&mut ::std::io::stderr(), $($arg)*);
+        r.expect("failed to write to stderr");
+    }}
+}
 
 
 fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
@@ -100,17 +108,35 @@ fn validate_percents(v: String) -> Result<(), String> {
 }
 
 
+fn parse_percents<'a>(matches: &ArgMatches<'a>) -> Vec<u8> {
+    // This is pretty blunt: if it's not a valid value we just drop it
+    // and move on. Shouldn't actually matter in practice since we've
+    // already validated the value via the `validate_percents` method.
+    // If it's present here, it should be valid, if it's not present
+    // we use the defaults.
+    if let Some(p) = matches.value_of("percentiles") {
+        p.split(',')
+            .flat_map(|v| v.parse::<u8>())
+            .filter(|&v| v >= 1 && v <= 99)
+            .collect()
+    } else {
+        Vec::from(DEFAULT_PERCENTILES)
+    }
+}
+
+
+fn parse_separator<'a>(matches: &ArgMatches<'a>) -> KeyValueSep {
+    value_t!(matches, "separator", KeyValueSep).unwrap_or_else(|_| {
+        DEFAULT_SEPARATOR.clone()
+    })
+}
+
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let matches = parse_cli_opts(args);
-
-    let percents: Vec<u8> = values_t!(matches, "percentiles", u8).unwrap_or_else(|_| {
-        Vec::from(DEFAULT_PERCENTILES)
-    });
-
-    let separator: KeyValueSep = value_t!(matches, "separator", KeyValueSep).unwrap_or_else(|_| {
-        DEFAULT_SEPARATOR.clone()
-    });
+    let percents = parse_percents(&matches);
+    let separator = parse_separator(&matches);
 
     let line_result = if let Some(f) = matches.value_of("file") {
         // If we've been given a file argument, try to open it and read
@@ -119,7 +145,7 @@ fn main() {
         match File::open(f) {
             Ok(handle) => get_sorted_values(&mut BufReader::new(handle)),
             Err(e) => {
-                let _ = writeln!(stderr(), "error: Cannot open file: {}", e);
+                eprintln!("error: Cannot open file: {}", e);
                 process::exit(1);
             }
         }
@@ -130,7 +156,7 @@ fn main() {
     let lines = match line_result {
         Ok(v) => v,
         Err(e) => {
-            let _ = writeln!(stderr(), "error: Could not parse values: {}", e);
+            eprintln!("error: Could not parse values: {}", e);
             process::exit(1);
         }
     };
@@ -139,7 +165,119 @@ fn main() {
     if let Some(v) = stats {
         print!("{}", StatisticsFormatter::with_sep(&v, separator));
     } else {
-        // use clap error format here?
-        let _ = writeln!(stderr(), "error: No values to compute stats for");
+        eprintln!("warning: No values to compute stats for");
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        parse_percents,
+        parse_separator,
+        validate_percents,
+        DEFAULT_PERCENTILES,
+        DEFAULT_SEPARATOR
+    };
+    use staccato::KeyValueSep;
+    use clap::{Arg, App};
+
+    #[test]
+    fn test_validate_percents_err_not_in_range() {
+        let percents = "75,90,100,110".to_string();
+        let res = validate_percents(percents);
+
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_validate_percents_err_not_a_number() {
+        let percents = "75,banana".to_string();
+        let res = validate_percents(percents);
+
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_validate_percents_ok() {
+        let percents = "75,90,95,98".to_string();
+        let res = validate_percents(percents);
+
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_parse_percents_no_matches() {
+        let args = App::new("test")
+            .arg(Arg::with_name("percentiles")
+                 .short("p")
+                 .long("percentiles")
+                 .takes_value(true))
+            .get_matches_from(vec!["test"]);
+
+        let expected: Vec<u8> = Vec::from(DEFAULT_PERCENTILES);
+        let parsed = parse_percents(&args);
+
+        assert_eq!(expected, parsed);
+    }
+
+    #[test]
+    fn test_parse_percents_matches() {
+        let args = App::new("test")
+            .arg(Arg::with_name("percentiles")
+                 .short("p")
+                 .long("percentiles")
+                 .takes_value(true))
+            .get_matches_from(vec!["test", "-p", "90,95"]);
+
+        let expected: Vec<u8> = vec![90, 95];
+        let parsed = parse_percents(&args);
+
+        assert_eq!(expected, parsed);
+    }
+
+    #[test]
+    fn test_parse_separator_no_matches() {
+        let args = App::new("test")
+            .arg(Arg::with_name("separator")
+                 .short("s")
+                 .long("separator")
+                 .takes_value(true))
+            .get_matches_from(vec!["test"]);
+
+        let expected = DEFAULT_SEPARATOR;
+        let parsed = parse_separator(&args);
+
+        assert_eq!(expected, parsed);
+    }
+
+    #[test]
+    fn test_parse_separator_matches_tab() {
+        let args = App::new("test")
+            .arg(Arg::with_name("separator")
+                 .short("s")
+                 .long("separator")
+                 .takes_value(true))
+            .get_matches_from(vec!["test", "-s", "tab"]);
+
+        let expected = KeyValueSep::Tab;
+        let parsed = parse_separator(&args);
+
+        assert_eq!(expected, parsed);
+    }
+
+    #[test]
+    fn test_parse_separator_matches_other() {
+        let args = App::new("test")
+            .arg(Arg::with_name("separator")
+                 .short("s")
+                 .long("separator")
+                 .takes_value(true))
+            .get_matches_from(vec!["test", "-s", " = "]);
+
+        let expected = KeyValueSep::Other(" = ".to_string());
+        let parsed = parse_separator(&args);
+
+        assert_eq!(expected, parsed);
+    }
+  }
