@@ -17,11 +17,14 @@ Lots of em! Better examples coming soon!
 
 ## Install
 
-For now, the only way to install Staccato is from source, using Cargo:
+Staccato is a Rust project. For now, you'll need the Rust toolchain to install
+it. For more information about how to install Rust see https://www.rustup.rs/
+
+After you have Rust installed, you can build Staccato from source.
 
 ```
 git clone https://github.com/tshlabs/staccato.git && cd staccato
-cargo install
+cargo install --force
 st --help
 ```
 
