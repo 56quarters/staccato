@@ -1,6 +1,6 @@
 # Changelog
 
-## [v0.1.3](https://github.com/tshlabs/staccato/tree/0.1.3) - ????-??-??
+## [v0.1.3](https://github.com/tshlabs/staccato/tree/0.1.3) - 2017-03-01
 * Improve performance when not computing percentiles per [#7](https://github.com/tshlabs/staccato/issues/7).
 * Simplify stats parsing code per [#8](https://github.com/tshlabs/staccato/issues/8).
 
