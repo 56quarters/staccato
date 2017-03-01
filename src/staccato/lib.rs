@@ -49,22 +49,39 @@ pub struct StatisticsBundle {
 
 
 impl StatisticsBundle {
-    pub fn from_sorted(vals: &[f64], percentiles: &[u8])
-                       -> Option<StatisticsBundle>
-    {
+
+    /// Create a statistics bundle from a sequence of values.
+    ///
+    /// Note that as opposed to the `with_percentiles` method, there is no
+    /// requirement that these values are sorted.
+    ///
+    /// This method returns `None` if the sequence of values is empty.
+    pub fn from(vals: &[f64]) -> Option<StatisticsBundle> {
+        Self::with_percentiles(vals, &[])
+    }
+
+    /// Create a statistics bundle from a **sorted** sequence of values and
+    /// a sequence of percentiles.
+    ///
+    /// The values must be sorted or the statistics will be incorrect.
+    ///
+    /// This method returns `None` if the sequence of values is empty.
+    /// Additionally, if there are not enough values to create all the
+    /// desired percentile slices (e.g. 90th percentile for a series of
+    /// only 7 values) the slices without enough values will be omitted.
+    pub fn with_percentiles(vals: &[f64], percentiles: &[u8]) -> Option<StatisticsBundle> {
         if vals.len() == 0 {
             return None;
         }
 
-        let global_stats = Statistics::from(vals, None);
         let percentile_stats = percentiles.iter()
-            .map(|&p| Statistics::from(vals, Some(p)))
+            .flat_map(|&p| Statistics::from(vals, Some(p)))
             .collect();
 
-        Some(StatisticsBundle {
-            global: global_stats,
+        Statistics::from(vals, None).map(|global| { StatisticsBundle {
+            global: global,
             percentiles: percentile_stats,
-        })
+        }})
     }
 
     pub fn global_stats(&self) -> &Statistics {
@@ -91,7 +108,7 @@ pub struct Statistics {
 
 
 impl Statistics {
-    pub fn from(vals: &[f64], percentile: Option<u8>) -> Statistics {
+    pub fn from(vals: &[f64], percentile: Option<u8>) -> Option<Statistics> {
         let filtered = if let Some(v) = percentile {
             Self::slice_values(vals, v)
         } else {
@@ -103,7 +120,7 @@ impl Statistics {
         // below.
         let count = filtered.len();
         if count == 0 {
-            return Statistics::empty_from_percentile(percentile);
+            return None
         }
 
         let (lower, upper, sum) = Self::compute_min_max_sum(filtered);
@@ -111,7 +128,7 @@ impl Statistics {
         let median = Self::compute_median(filtered);
         let stddev = Self::compute_stddev(filtered, mean);
 
-        Statistics {
+        Some(Statistics {
             percentile: percentile,
             count: count,
             sum: sum,
@@ -120,7 +137,7 @@ impl Statistics {
             lower: lower,
             median: median,
             stddev: stddev,
-        }
+        })
     }
 
     pub fn percentile(&self) -> Option<u8> {
@@ -153,19 +170,6 @@ impl Statistics {
 
     pub fn stddev(&self) -> f64 {
         self.stddev
-    }
-
-    fn empty_from_percentile(p: Option<u8>) -> Statistics {
-        Statistics {
-            percentile: p,
-            count: 0,
-            sum: 0f64,
-            mean: 0f64,
-            upper: 0f64,
-            lower: 0f64,
-            median: 0f64,
-            stddev: 0f64,
-        }
     }
 
     fn slice_values(vals: &[f64], percentile: u8) -> &[f64] {
@@ -226,13 +230,6 @@ impl Statistics {
 
         let deviance = sum_deviance / num;
         deviance.sqrt()
-    }
-}
-
-
-impl Default for Statistics {
-    fn default() -> Statistics {
-        Self::empty_from_percentile(None)
     }
 }
 
@@ -373,169 +370,132 @@ mod tests {
 
     #[test]
     fn test_statistics_full_values_count() {
-        let stats = Statistics::from(VALUES, None);
+        let stats = Statistics::from(VALUES, None).unwrap();
         assert_eq!(6, stats.count());
     }
 
     #[test]
     fn test_statistics_full_values_sum() {
-        let stats = Statistics::from(VALUES, None);
+        let stats = Statistics::from(VALUES, None).unwrap();
         assert_eq!(36f64, stats.sum());
     }
 
     #[test]
     fn test_statistics_full_values_mean() {
-        let stats = Statistics::from(VALUES, None);
+        let stats = Statistics::from(VALUES, None).unwrap();
         assert_eq!(6f64, stats.mean());
     }
 
     #[test]
     fn test_statistics_full_values_upper() {
-        let stats = Statistics::from(VALUES, None);
+        let stats = Statistics::from(VALUES, None).unwrap();
         assert_eq!(12f64, stats.upper());
     }
 
     #[test]
     fn test_statistics_full_values_lower() {
-        let stats = Statistics::from(VALUES, None);
+        let stats = Statistics::from(VALUES, None).unwrap();
         assert_eq!(1f64, stats.lower());
     }
 
     #[test]
     fn test_statistics_full_values_median() {
-        let stats = Statistics::from(VALUES, None);
+        let stats = Statistics::from(VALUES, None).unwrap();
         assert_eq!(6f64, stats.median());
     }
 
     #[test]
     fn test_statistics_full_values_stddev() {
-        let stats = Statistics::from(VALUES, None);
+        let stats = Statistics::from(VALUES, None).unwrap();
         assert!((3.83 - stats.stddev()).abs() < 0.01);
     }
 
     #[test]
     fn test_statistics_50_values_count() {
-        let stats = Statistics::from(VALUES, Some(50));
+        let stats = Statistics::from(VALUES, Some(50)).unwrap();
         assert_eq!(3, stats.count());
     }
 
     #[test]
     fn test_statistics_50_values_sum() {
-        let stats = Statistics::from(VALUES, Some(50));
+        let stats = Statistics::from(VALUES, Some(50)).unwrap();
         assert_eq!(8f64, stats.sum());
     }
 
     #[test]
     fn test_statistics_50_values_mean() {
-        let stats = Statistics::from(VALUES, Some(50));
+        let stats = Statistics::from(VALUES, Some(50)).unwrap();
         assert!((2.66 - stats.mean()).abs() < 0.01);
     }
 
     #[test]
     fn test_statistics_50_values_upper() {
-        let stats = Statistics::from(VALUES, Some(50));
+        let stats = Statistics::from(VALUES, Some(50)).unwrap();
         assert_eq!(5f64, stats.upper());
     }
 
     #[test]
     fn test_statistics_50_values_lower() {
-        let stats = Statistics::from(VALUES, Some(50));
+        let stats = Statistics::from(VALUES, Some(50)).unwrap();
         assert_eq!(1f64, stats.lower());
     }
 
     #[test]
     fn test_statistics_50_values_median() {
-        let stats = Statistics::from(VALUES, Some(50));
+        let stats = Statistics::from(VALUES, Some(50)).unwrap();
         assert_eq!(2f64, stats.median());
     }
 
     #[test]
     fn test_statistics_50_values_stddev() {
-        let stats = Statistics::from(VALUES, Some(50));
+        let stats = Statistics::from(VALUES, Some(50)).unwrap();
         assert!((1.70 - stats.stddev()).abs() < 0.01);
     }
 
     #[test]
-    fn test_statistics_empty_values_count() {
-        let stats = Statistics::from(EMPTY, None);
-        assert_eq!(0, stats.count());
-    }
-
-    #[test]
-    fn test_statistics_empty_values_sum() {
-        let stats = Statistics::from(EMPTY, None);
-        assert_eq!(0f64, stats.sum());
-    }
-
-    #[test]
-    fn test_statistics_empty_values_mean() {
-        let stats = Statistics::from(EMPTY, None);
-        assert_eq!(0f64, stats.mean());
-    }
-
-    #[test]
-    fn test_statistics_empty_values_upper() {
-        let stats = Statistics::from(EMPTY, None);
-        assert_eq!(0f64, stats.upper());
-    }
-
-    #[test]
-    fn test_statistics_empty_values_lower() {
-        let stats = Statistics::from(EMPTY, None);
-        assert_eq!(0f64, stats.lower());
-    }
-
-    #[test]
-    fn test_statistics_empty_values_median() {
-        let stats = Statistics::from(EMPTY, None);
-        assert_eq!(0f64, stats.median());
-    }
-
-    #[test]
-    fn test_statistics_empty_values_stddev() {
-        let stats = Statistics::from(EMPTY, None);
-        assert_eq!(0f64, stats.stddev());
+    fn test_statistics_empty_values() {
+        assert!(Statistics::from(EMPTY, None).is_none());
     }
 
     #[test]
     fn test_statistics_single_value_count() {
-        let stats = Statistics::from(SINGLE, None);
+        let stats = Statistics::from(SINGLE, None).unwrap();
         assert_eq!(1, stats.count());
     }
 
     #[test]
     fn test_statistics_single_value_sum() {
-        let stats = Statistics::from(SINGLE, None);
+        let stats = Statistics::from(SINGLE, None).unwrap();
         assert_eq!(13f64, stats.sum());
     }
 
     #[test]
     fn test_statistics_single_value_mean() {
-        let stats = Statistics::from(SINGLE, None);
+        let stats = Statistics::from(SINGLE, None).unwrap();
         assert_eq!(13f64, stats.mean());
     }
 
     #[test]
     fn test_statistics_single_value_upper() {
-        let stats = Statistics::from(SINGLE, None);
+        let stats = Statistics::from(SINGLE, None).unwrap();
         assert_eq!(13f64, stats.upper());
     }
 
     #[test]
     fn test_statistics_single_value_lower() {
-        let stats = Statistics::from(SINGLE, None);
+        let stats = Statistics::from(SINGLE, None).unwrap();
         assert_eq!(13f64, stats.lower());
     }
 
     #[test]
     fn test_statistics_single_value_median() {
-        let stats = Statistics::from(SINGLE, None);
+        let stats = Statistics::from(SINGLE, None).unwrap();
         assert_eq!(13f64, stats.median());
     }
 
     #[test]
     fn test_statistics_single_value_stddev() {
-        let stats = Statistics::from(SINGLE, None);
+        let stats = Statistics::from(SINGLE, None).unwrap();
         assert_eq!(0f64, stats.stddev());
     }
 
