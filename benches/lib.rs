@@ -15,7 +15,7 @@ const LARGE_FILE: &'static str = "benches/values-large.log";
 fn get_test_values(path: &str) -> Vec<f64> {
     let reader = File::open(path).unwrap();
     let mut buf = BufReader::new(reader);
-    staccato::get_sorted_values(&mut buf).unwrap()
+    staccato::get_values(&mut buf, staccato::SortingPolicy::Sorted).unwrap()
 }
 
 
