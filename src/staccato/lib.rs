@@ -28,7 +28,14 @@ use std::str::FromStr;
 const DISPLAY_PRECISION: usize = 5;
 
 
-pub fn get_sorted_values<T: Read>(reader: &mut T) -> Result<Vec<f64>, io::Error> {
+#[derive(PartialEq, Eq)]
+pub enum SortingPolicy {
+    Sorted,
+    Unsorted,
+}
+
+
+pub fn get_values<T: Read>(reader: &mut T, sort: SortingPolicy) -> Result<Vec<f64>, io::Error> {
     let mut buf = String::new();
     try!(reader.read_to_string(&mut buf));
 
@@ -36,7 +43,10 @@ pub fn get_sorted_values<T: Read>(reader: &mut T) -> Result<Vec<f64>, io::Error>
         .filter_map(|v| v.parse::<f64>().ok())
         .collect();
 
-    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
+    if sort == SortingPolicy::Sorted {
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Less));
+    }
+
     Ok(values)
 }
 
@@ -336,7 +346,7 @@ impl<'a> fmt::Display for StatisticsFormatter<'a> {
 #[cfg(test)]
 mod tests {
     use std::io::Cursor;
-    use super::{get_sorted_values, Statistics, KeyValueSep};
+    use super::{get_values, SortingPolicy, Statistics, KeyValueSep};
 
     const VALUES: &'static [f64] = &[
         1f64, 2f64, 5f64, 7f64, 9f64, 12f64
@@ -347,25 +357,36 @@ mod tests {
     const EMPTY: &'static [f64] = &[];
 
     #[test]
-    fn test_get_sorted_values_filter_invalids() {
+    fn test_get_values_filter_invalids() {
         let bytes: Vec<u8> = vec!["asdf\n", "4.5\n", "xyz\n"].iter()
             .flat_map(|v| v.as_bytes())
             .map(|&v| v)
             .collect();
 
         let mut reader = Cursor::new(bytes);
-        assert_eq!(vec![4.5], get_sorted_values(&mut reader).unwrap());
+        assert_eq!(vec![4.5], get_values(&mut reader, SortingPolicy::Sorted).unwrap());
     }
 
     #[test]
-    fn test_get_sorted_values_ordered() {
+    fn test_get_values_ordered() {
         let bytes: Vec<u8> = vec!["9.8\n", "4.5\n", "5.6\n"].iter()
             .flat_map(|v| v.as_bytes())
             .map(|&v| v)
             .collect();
 
         let mut reader = Cursor::new(bytes);
-        assert_eq!(vec![4.5, 5.6, 9.8], get_sorted_values(&mut reader).unwrap());
+        assert_eq!(vec![4.5, 5.6, 9.8], get_values(&mut reader, SortingPolicy::Sorted).unwrap());
+    }
+
+    #[test]
+    fn test_get_values_unordered() {
+        let bytes: Vec<u8> = vec!["9.8\n", "4.5\n", "5.6\n"].iter()
+            .flat_map(|v| v.as_bytes())
+            .map(|&v| v)
+            .collect();
+
+        let mut reader = Cursor::new(bytes);
+        assert_eq!(vec![9.8, 4.5, 5.6], get_values(&mut reader, SortingPolicy::Unsorted).unwrap());
     }
 
     #[test]
