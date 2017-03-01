@@ -161,7 +161,7 @@ fn main() {
         }
     };
 
-    let stats = StatisticsBundle::from_sorted(&lines, &percents);
+    let stats = StatisticsBundle::with_percentiles(&lines, &percents);
     if let Some(v) = stats {
         print!("{}", StatisticsFormatter::with_sep(&v, separator));
     } else {
