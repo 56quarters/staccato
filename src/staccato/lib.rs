@@ -37,7 +37,7 @@ pub enum SortingPolicy {
 
 pub fn get_values<T: Read>(reader: &mut T, sort: SortingPolicy) -> Result<Vec<f64>, io::Error> {
     let mut buf = String::new();
-    try!(reader.read_to_string(&mut buf));
+    reader.read_to_string(&mut buf)?;
 
     let mut values: Vec<f64> = buf.lines()
         .filter_map(|v| v.parse::<f64>().ok())
