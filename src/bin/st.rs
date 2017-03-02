@@ -102,7 +102,7 @@ fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
 fn validate_percents(v: String) -> Result<(), String> {
     for p in v.split(',') {
         match p.parse::<u8>() {
-            Ok(i) if i > 0 && i <= 100 => i,
+            Ok(i) if i > 0 && i < 100 => i,
             _ => {
                 return Err("Invalid percentile value".to_string());
             }
@@ -195,6 +195,22 @@ mod tests {
     #[test]
     fn test_validate_percents_err_not_in_range() {
         let percents = "75,90,100,110".to_string();
+        let res = validate_percents(percents);
+
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_validate_percents_lower_bound() {
+        let percents = "0,50,75".to_string();
+        let res = validate_percents(percents);
+
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_validate_percents_upper_bound() {
+        let percents = "50,75,100".to_string();
         let res = validate_percents(percents);
 
         assert!(res.is_err());
