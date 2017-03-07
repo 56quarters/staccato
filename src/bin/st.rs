@@ -160,6 +160,14 @@ fn main() {
             }
         }
     } else {
+        // Let the user know we're just going to block on stdin before doing
+        // it since sometimes people run commands without arguments just
+        // expecting them to display help.
+        eprintln!(concat!(
+            "notice: waiting for input from stdin. If this isn't what you ",
+            "want, try `st --help`"
+        ));
+
         get_values(&mut BufReader::new(stdin()), sorting)
     };
 
