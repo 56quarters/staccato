@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.1.5](https://github.com/tshlabs/staccato/tree/0.1.5) - 2017-03-08
+* Emit notice to `stderr` when reading from `stdin` per [#13](https://github.com/tshlabs/staccato/issues/13).
+
 ## [v0.1.4](https://github.com/tshlabs/staccato/tree/0.1.4) - 2017-03-02
 * Fix validation of percentiles per [#11](https://github.com/tshlabs/staccato/issues/11).
 

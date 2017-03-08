@@ -1,6 +1,6 @@
 [package]
 name = "staccato"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["TSH Labs"]
 description = "Statistics from the command line"
 homepage = "https://github.com/tshlabs/staccato"
