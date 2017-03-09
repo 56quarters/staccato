@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.1.6](https://github.com/tshlabs/staccato/tree/0.1.6) - 2017-03-09
+* Don't reference binary name in help output per [#15](https://github.com/tshlabs/staccato/issues/15).
+
 ## [v0.1.5](https://github.com/tshlabs/staccato/tree/0.1.5) - 2017-03-08
 * Emit notice to `stderr` when reading from `stdin` per [#13](https://github.com/tshlabs/staccato/issues/13).
 
