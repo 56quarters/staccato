@@ -165,7 +165,7 @@ fn main() {
         // expecting them to display help.
         eprintln!(concat!(
             "notice: waiting for input from stdin. If this isn't what you ",
-            "want, try `st --help`"
+            "want, try running with the `--help` option"
         ));
 
         get_values(&mut BufReader::new(stdin()), sorting)
