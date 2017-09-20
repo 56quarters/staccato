@@ -40,6 +40,7 @@ pub fn get_values<T: Read>(reader: &mut T, sort: SortingPolicy) -> Result<Vec<f6
     reader.read_to_string(&mut buf)?;
 
     let mut values: Vec<f64> = buf.lines()
+        .map(|v| v.trim())
         .filter_map(|v| v.parse::<f64>().ok())
         .collect();
 
@@ -370,6 +371,17 @@ mod tests {
     #[test]
     fn test_get_values_ordered() {
         let bytes: Vec<u8> = vec!["9.8\n", "4.5\n", "5.6\n"].iter()
+            .flat_map(|v| v.as_bytes())
+            .map(|&v| v)
+            .collect();
+
+        let mut reader = Cursor::new(bytes);
+        assert_eq!(vec![4.5, 5.6, 9.8], get_values(&mut reader, SortingPolicy::Sorted).unwrap());
+    }
+
+    #[test]
+    fn test_get_values_trim_whitespace() {
+        let bytes: Vec<u8> = vec!["9.8   \n", "4.5 \n", "5.6\t\n"].iter()
             .flat_map(|v| v.as_bytes())
             .map(|&v| v)
             .collect();
