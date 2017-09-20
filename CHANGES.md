@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.1.7](https://github.com/tshlabs/staccato/tree/0.1.7) - 2017-09-20
+* Trim leading and trailing whitespace per [#17](https://github.com/tshlabs/staccato/issues/17).
+
 ## [v0.1.6](https://github.com/tshlabs/staccato/tree/0.1.6) - 2017-03-09
 * Don't reference binary name in help output per [#15](https://github.com/tshlabs/staccato/issues/15).
 
