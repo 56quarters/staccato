@@ -93,7 +93,10 @@ fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
         .arg(Arg::with_name("file")
              .help(concat!(
                  "Optional file to read values to from. If not supplied ",
-                  "values will be read from standard input."))
+                 "values will be read from standard input. The values are ",
+                 "expected to be floating point or integer values, one per ",
+                 "line. Leading or trailing whitespace will be removed before ",
+                 "parsing each value."))
              .index(1))
         .get_matches_from(args)
 }
