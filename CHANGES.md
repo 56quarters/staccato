@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.1.8](https://github.com/tshlabs/staccato/tree/0.1.8) - 2018-05-12
+* Build a Docker image based on the most recent tag.
+
 ## [v0.1.7](https://github.com/tshlabs/staccato/tree/0.1.7) - 2017-09-20
 * Trim leading and trailing whitespace per [#17](https://github.com/tshlabs/staccato/issues/17).
 
