@@ -23,12 +23,9 @@ it. For more information about how to install Rust see https://www.rustup.rs/
 After you have Rust installed, you can build Staccato from source.
 
 ```
-git clone https://github.com/tshlabs/staccato.git && cd staccato
-cargo install --force
+cargo install --force staccato
 st --help
 ```
-
-Better installation and docs coming soon!
 
 ## Examples
 
@@ -96,10 +93,6 @@ lower: 0.00577
 median: 0.02101
 stddev: 0.60871
 ```
-
-## Documentation
-
-Coming soon!
 
 ## Source
 
