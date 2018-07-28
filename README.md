@@ -49,9 +49,10 @@ like `awk`, `cut`, and `tail`.
 
 The most obvious use case for Staccato is when you already have a file
 full of numbers and you want to know things about them. For example, imagine
-you have a file called `timings.log` that looks like this:
+you have a file called `timings.log` like so:
 
 ```
+$ cat << EOF > timings.log
 0.572124
 0.623724
 1.043369
@@ -61,6 +62,7 @@ you have a file called `timings.log` that looks like this:
 1.677319
 0.170808
 0.147564
+EOF
 ```
 
 To get statistics about those values, you'd run Staccato like this:
