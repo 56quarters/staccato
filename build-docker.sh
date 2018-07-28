@@ -10,6 +10,4 @@ cargo build --release --target=x86_64-unknown-linux-musl
 strip --strip-debug target/x86_64-unknown-linux-musl/release/st
 docker build -t "${PROJECT}:latest" .
 docker tag "${PROJECT}:latest" "${PROJECT}:${VERSION}"
-docker push "${PROJECT}:latest"
-docker push "${PROJECT}:${VERSION}"
 git checkout -

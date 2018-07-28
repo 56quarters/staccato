@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.1.9](https://github.com/tshlabs/staccato/tree/0.1.9) - 2018-07-27
+* Build Docker image based on `scratch` for smaller image size.
+
 ## [v0.1.8](https://github.com/tshlabs/staccato/tree/0.1.8) - 2018-05-12
 * Build a Docker image based on the most recent tag.
 
