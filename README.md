@@ -17,14 +17,26 @@ Lots of em! Better examples coming soon!
 
 ## Install
 
-Staccato is a Rust project. For now, you'll need the Rust toolchain to install
-it. For more information about how to install Rust see https://www.rustup.rs/
+### Cargo (Rust build tool)
+
+Staccato is a Rust project. If you want to build from source, you'll need the Rust
+toolchain. For more information about how to install Rust see https://www.rustup.rs/
 
 After you have Rust installed, you can build Staccato from source.
 
 ```
+git clone https://github.com/tshlabs/staccato.git && cd staccato
 cargo install --force staccato
 st --help
+```
+
+### Docker
+
+Docker images of Staccato are pushed to Docker Hub for each release. To run the latest
+version, use the following command.
+
+```
+docker run --rm --tty --interactive tshlabs/staccato:latest
 ```
 
 ## Examples

@@ -55,7 +55,7 @@ dependencies = [
 
 [[package]]
 name = "staccato"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
