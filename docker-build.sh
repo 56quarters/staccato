@@ -5,9 +5,10 @@ set -o errexit
 
 PROJECT="tshlabs/staccato"
 VERSION=`git describe --abbrev=0 --tags`
+
 git checkout "$VERSION"
-cargo build --release --target=x86_64-unknown-linux-musl
-strip --strip-debug target/x86_64-unknown-linux-musl/release/st
 docker build -t "${PROJECT}:latest" .
 docker tag "${PROJECT}:latest" "${PROJECT}:${VERSION}"
 git checkout -
+
+docker run -ti --rm "${PROJECT}:latest"
