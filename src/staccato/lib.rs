@@ -16,17 +16,14 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-
-use std::fmt;
-use std::io;
 use std::cmp::Ordering;
-use std::io::Read;
+use std::fmt;
 use std::fmt::Write;
+use std::io;
+use std::io::Read;
 use std::str::FromStr;
 
-
 const DISPLAY_PRECISION: usize = 5;
-
 
 #[derive(PartialEq, Eq)]
 pub enum SortingPolicy {
@@ -34,12 +31,12 @@ pub enum SortingPolicy {
     Unsorted,
 }
 
-
 pub fn get_values<T: Read>(reader: &mut T, sort: SortingPolicy) -> Result<Vec<f64>, io::Error> {
     let mut buf = String::new();
     reader.read_to_string(&mut buf)?;
 
-    let mut values: Vec<f64> = buf.lines()
+    let mut values: Vec<f64> = buf
+        .lines()
         .map(|v| v.trim())
         .filter_map(|v| v.parse::<f64>().ok())
         .collect();
@@ -51,16 +48,13 @@ pub fn get_values<T: Read>(reader: &mut T, sort: SortingPolicy) -> Result<Vec<f6
     Ok(values)
 }
 
-
 #[derive(Debug, Clone)]
 pub struct StatisticsBundle {
     global: Statistics,
     percentiles: Vec<Statistics>,
 }
 
-
 impl StatisticsBundle {
-
     /// Create a statistics bundle from a sequence of values.
     ///
     /// Note that as opposed to the `with_percentiles` method, there is no
@@ -85,14 +79,15 @@ impl StatisticsBundle {
             return None;
         }
 
-        let percentile_stats = percentiles.iter()
+        let percentile_stats = percentiles
+            .iter()
             .flat_map(|&p| Statistics::from(vals, Some(p)))
             .collect();
 
-        Statistics::from(vals, None).map(|global| { StatisticsBundle {
+        Statistics::from(vals, None).map(|global| StatisticsBundle {
             global: global,
             percentiles: percentile_stats,
-        }})
+        })
     }
 
     pub fn global_stats(&self) -> &Statistics {
@@ -103,7 +98,6 @@ impl StatisticsBundle {
         &self.percentiles
     }
 }
-
 
 #[derive(Debug, Clone)]
 pub struct Statistics {
@@ -116,7 +110,6 @@ pub struct Statistics {
     median: f64,
     stddev: f64,
 }
-
 
 impl Statistics {
     pub fn from(vals: &[f64], percentile: Option<u8>) -> Option<Statistics> {
@@ -131,7 +124,7 @@ impl Statistics {
         // below.
         let count = filtered.len();
         if count == 0 {
-            return None
+            return None;
         }
 
         let (lower, upper, sum) = Self::compute_min_max_sum(filtered);
@@ -207,7 +200,6 @@ impl Statistics {
         // would have handled that with the 'is_odd' case
         // above. Otherwise this will do the right thing.
         (vals[upper_med] + vals[lower_med]) / 2f64
-
     }
 
     fn compute_min_max_sum(vals: &[f64]) -> (f64, f64, f64) {
@@ -235,19 +227,15 @@ impl Statistics {
 
     fn compute_stddev(vals: &[f64], mean: f64) -> f64 {
         let num = vals.len() as f64;
-        let sum_deviance = vals.iter().fold(0f64, |sum, &x| {
-            sum + (x - mean).powi(2)
-        });
+        let sum_deviance = vals.iter().fold(0f64, |sum, &x| sum + (x - mean).powi(2));
 
         let deviance = sum_deviance / num;
         deviance.sqrt()
     }
 }
 
-
 #[derive(PartialEq, Debug, Clone)]
 pub struct KeyValueParseError(());
-
 
 #[derive(PartialEq, Eq, Debug, Hash, Clone)]
 pub enum KeyValueSep {
@@ -255,7 +243,6 @@ pub enum KeyValueSep {
     Colon,
     Other(String),
 }
-
 
 impl KeyValueSep {
     fn get_sep(&self) -> &str {
@@ -267,13 +254,11 @@ impl KeyValueSep {
     }
 }
 
-
 impl fmt::Display for KeyValueSep {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.get_sep().fmt(f)
     }
 }
-
 
 impl FromStr for KeyValueSep {
     type Err = KeyValueParseError;
@@ -289,13 +274,11 @@ impl FromStr for KeyValueSep {
     }
 }
 
-
 #[derive(Debug)]
 pub struct StatisticsFormatter<'a> {
     bundle: &'a StatisticsBundle,
     sep: KeyValueSep,
 }
-
 
 impl<'a> StatisticsFormatter<'a> {
     pub fn new(bundle: &'a StatisticsBundle) -> StatisticsFormatter<'a> {
@@ -303,7 +286,10 @@ impl<'a> StatisticsFormatter<'a> {
     }
 
     pub fn with_sep(bundle: &'a StatisticsBundle, sep: KeyValueSep) -> StatisticsFormatter<'a> {
-        StatisticsFormatter { bundle: bundle, sep: sep }
+        StatisticsFormatter {
+            bundle: bundle,
+            sep: sep,
+        }
     }
 
     fn write_to_buf<T: Write>(buf: &mut T, stats: &Statistics, sep: &KeyValueSep) {
@@ -327,7 +313,6 @@ impl<'a> StatisticsFormatter<'a> {
     }
 }
 
-
 impl<'a> fmt::Display for StatisticsFormatter<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut buf = String::new();
@@ -343,15 +328,12 @@ impl<'a> fmt::Display for StatisticsFormatter<'a> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
+    use super::{get_values, KeyValueSep, SortingPolicy, Statistics};
     use std::io::Cursor;
-    use super::{get_values, SortingPolicy, Statistics, KeyValueSep};
 
-    const VALUES: &'static [f64] = &[
-        1f64, 2f64, 5f64, 7f64, 9f64, 12f64
-    ];
+    const VALUES: &'static [f64] = &[1f64, 2f64, 5f64, 7f64, 9f64, 12f64];
 
     const SINGLE: &'static [f64] = &[13f64];
 
@@ -359,7 +341,8 @@ mod tests {
 
     #[test]
     fn test_get_values_filter_invalids() {
-        let bytes: Vec<u8> = vec!["asdf\n", "4.5\n", "xyz\n"].iter()
+        let bytes: Vec<u8> = vec!["asdf\n", "4.5\n", "xyz\n"]
+            .iter()
             .flat_map(|v| v.as_bytes())
             .map(|&v| v)
             .collect();
@@ -370,35 +353,47 @@ mod tests {
 
     #[test]
     fn test_get_values_ordered() {
-        let bytes: Vec<u8> = vec!["9.8\n", "4.5\n", "5.6\n"].iter()
+        let bytes: Vec<u8> = vec!["9.8\n", "4.5\n", "5.6\n"]
+            .iter()
             .flat_map(|v| v.as_bytes())
             .map(|&v| v)
             .collect();
 
         let mut reader = Cursor::new(bytes);
-        assert_eq!(vec![4.5, 5.6, 9.8], get_values(&mut reader, SortingPolicy::Sorted).unwrap());
+        assert_eq!(
+            vec![4.5, 5.6, 9.8],
+            get_values(&mut reader, SortingPolicy::Sorted).unwrap()
+        );
     }
 
     #[test]
     fn test_get_values_trim_whitespace() {
-        let bytes: Vec<u8> = vec!["9.8   \n", "4.5 \n", "5.6\t\n"].iter()
+        let bytes: Vec<u8> = vec!["9.8   \n", "4.5 \n", "5.6\t\n"]
+            .iter()
             .flat_map(|v| v.as_bytes())
             .map(|&v| v)
             .collect();
 
         let mut reader = Cursor::new(bytes);
-        assert_eq!(vec![4.5, 5.6, 9.8], get_values(&mut reader, SortingPolicy::Sorted).unwrap());
+        assert_eq!(
+            vec![4.5, 5.6, 9.8],
+            get_values(&mut reader, SortingPolicy::Sorted).unwrap()
+        );
     }
 
     #[test]
     fn test_get_values_unordered() {
-        let bytes: Vec<u8> = vec!["9.8\n", "4.5\n", "5.6\n"].iter()
+        let bytes: Vec<u8> = vec!["9.8\n", "4.5\n", "5.6\n"]
+            .iter()
             .flat_map(|v| v.as_bytes())
             .map(|&v| v)
             .collect();
 
         let mut reader = Cursor::new(bytes);
-        assert_eq!(vec![9.8, 4.5, 5.6], get_values(&mut reader, SortingPolicy::Unsorted).unwrap());
+        assert_eq!(
+            vec![9.8, 4.5, 5.6],
+            get_values(&mut reader, SortingPolicy::Unsorted).unwrap()
+        );
     }
 
     #[test]
@@ -543,14 +538,19 @@ mod tests {
     fn test_key_value_sep_display() {
         assert_eq!("\t".to_string(), format!("{}", KeyValueSep::Tab));
         assert_eq!(": ".to_string(), format!("{}", KeyValueSep::Colon));
-        assert_eq!(" => ".to_string(), format!("{}", KeyValueSep::Other(" => ".to_string())));
+        assert_eq!(
+            " => ".to_string(),
+            format!("{}", KeyValueSep::Other(" => ".to_string()))
+        );
     }
 
     #[test]
     fn test_key_value_sep_from_str() {
         assert_eq!(KeyValueSep::Tab, "tab".parse::<KeyValueSep>().unwrap());
         assert_eq!(KeyValueSep::Colon, "colon".parse::<KeyValueSep>().unwrap());
-        assert_eq!(KeyValueSep::Other(" => ".to_string()), " => ".parse::<KeyValueSep>().unwrap());
-
+        assert_eq!(
+            KeyValueSep::Other(" => ".to_string()),
+            " => ".parse::<KeyValueSep>().unwrap()
+        );
     }
 }

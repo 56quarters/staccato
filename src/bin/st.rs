@@ -25,20 +25,12 @@ use std::fs::File;
 use std::io::{stdin, BufReader, Write};
 use std::process;
 
-use clap::{Arg, App, ArgMatches};
-use staccato::{
-    get_values,
-    SortingPolicy,
-    StatisticsBundle,
-    StatisticsFormatter,
-    KeyValueSep,
-};
-
+use clap::{App, Arg, ArgMatches};
+use staccato::{get_values, KeyValueSep, SortingPolicy, StatisticsBundle, StatisticsFormatter};
 
 const DEFAULT_PERCENTILES: &'static [u8] = &[];
 const DEFAULT_SEPARATOR: KeyValueSep = KeyValueSep::Colon;
 const DEFAULT_TERM_WIDTH: usize = 72;
-
 
 macro_rules! eprintln {
     ($($arg:tt)*) => {{
@@ -46,7 +38,6 @@ macro_rules! eprintln {
         r.expect("failed to write to stderr");
     }}
 }
-
 
 fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
     App::new("Staccato")
@@ -64,43 +55,52 @@ fn parse_cli_opts<'a>(args: Vec<String>) -> ArgMatches<'a> {
             "can have it additionally compute statistics for some subset of the ",
             "values of the stream. For example, using the argument `-p 25,50` ",
             "would compute statistics for the lower 25% of values and lower 50% ",
-            "of values."))
-        .arg(Arg::with_name("percentiles")
-             .short("p")
-             .long("percentiles")
-             .help(concat!(
-                 "Comma separated list of percentiles (from 1 to 99, ",
-                  "inclusive) that should have metrics computed. Default ",
-                  "is not to compute metrics for any specific percentiles, ",
-                  "only the global metrics."))
-             .takes_value(true)
-             .validator(validate_percents))
-        .arg(Arg::with_name("separator")
-             .short("s")
-             .long("separator")
-             .help(concat!(
-                 "Type of separator to use when printing keys and values. ",
-                 "Possible values for this option are the literal string ",
-                 "'tab' for the tab character, the literal string 'colon' ",
-                 "for a colon and space, or any other string to use that ",
-                 "as a separator. For example you could use the string ",
-                 "' => ' as a separator. Default is to use a colon and a ",
-                 "space."))
-             .takes_value(true))
+            "of values."
+        ))
+        .arg(
+            Arg::with_name("percentiles")
+                .short("p")
+                .long("percentiles")
+                .help(concat!(
+                    "Comma separated list of percentiles (from 1 to 99, ",
+                    "inclusive) that should have metrics computed. Default ",
+                    "is not to compute metrics for any specific percentiles, ",
+                    "only the global metrics."
+                ))
+                .takes_value(true)
+                .validator(validate_percents),
+        )
+        .arg(
+            Arg::with_name("separator")
+                .short("s")
+                .long("separator")
+                .help(concat!(
+                    "Type of separator to use when printing keys and values. ",
+                    "Possible values for this option are the literal string ",
+                    "'tab' for the tab character, the literal string 'colon' ",
+                    "for a colon and space, or any other string to use that ",
+                    "as a separator. For example you could use the string ",
+                    "' => ' as a separator. Default is to use a colon and a ",
+                    "space."
+                ))
+                .takes_value(true),
+        )
         // Note that we aren't using any validators for the file input.
         // We'll just try to open it and see what happens. Otherwise we
         // become susceptible to race conditions.
-        .arg(Arg::with_name("file")
-             .help(concat!(
-                 "Optional file to read values to from. If not supplied ",
-                 "values will be read from standard input. The values are ",
-                 "expected to be floating point or integer values, one per ",
-                 "line. Leading or trailing whitespace will be removed before ",
-                 "parsing each value."))
-             .index(1))
+        .arg(
+            Arg::with_name("file")
+                .help(concat!(
+                    "Optional file to read values to from. If not supplied ",
+                    "values will be read from standard input. The values are ",
+                    "expected to be floating point or integer values, one per ",
+                    "line. Leading or trailing whitespace will be removed before ",
+                    "parsing each value."
+                ))
+                .index(1),
+        )
         .get_matches_from(args)
 }
-
 
 fn validate_percents(v: String) -> Result<(), String> {
     for p in v.split(',') {
@@ -114,7 +114,6 @@ fn validate_percents(v: String) -> Result<(), String> {
 
     Ok(())
 }
-
 
 fn parse_percents<'a>(matches: &ArgMatches<'a>) -> Vec<u8> {
     // This is pretty blunt: if it's not a valid value we just drop it
@@ -132,13 +131,9 @@ fn parse_percents<'a>(matches: &ArgMatches<'a>) -> Vec<u8> {
     }
 }
 
-
 fn parse_separator<'a>(matches: &ArgMatches<'a>) -> KeyValueSep {
-    value_t!(matches, "separator", KeyValueSep).unwrap_or_else(|_| {
-        DEFAULT_SEPARATOR.clone()
-    })
+    value_t!(matches, "separator", KeyValueSep).unwrap_or_else(|_| DEFAULT_SEPARATOR.clone())
 }
-
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -190,18 +185,11 @@ fn main() {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use super::{
-        parse_percents,
-        parse_separator,
-        validate_percents,
-        DEFAULT_PERCENTILES,
-        DEFAULT_SEPARATOR
-    };
+    use super::{parse_percents, parse_separator, validate_percents, DEFAULT_PERCENTILES, DEFAULT_SEPARATOR};
+    use clap::{App, Arg};
     use staccato::KeyValueSep;
-    use clap::{Arg, App};
 
     #[test]
     fn test_validate_percents_err_not_in_range() {
@@ -246,10 +234,12 @@ mod tests {
     #[test]
     fn test_parse_percents_no_matches() {
         let args = App::new("test")
-            .arg(Arg::with_name("percentiles")
-                 .short("p")
-                 .long("percentiles")
-                 .takes_value(true))
+            .arg(
+                Arg::with_name("percentiles")
+                    .short("p")
+                    .long("percentiles")
+                    .takes_value(true),
+            )
             .get_matches_from(vec!["test"]);
 
         let expected: Vec<u8> = Vec::from(DEFAULT_PERCENTILES);
@@ -261,10 +251,12 @@ mod tests {
     #[test]
     fn test_parse_percents_matches() {
         let args = App::new("test")
-            .arg(Arg::with_name("percentiles")
-                 .short("p")
-                 .long("percentiles")
-                 .takes_value(true))
+            .arg(
+                Arg::with_name("percentiles")
+                    .short("p")
+                    .long("percentiles")
+                    .takes_value(true),
+            )
             .get_matches_from(vec!["test", "-p", "90,95"]);
 
         let expected: Vec<u8> = vec![90, 95];
@@ -276,10 +268,12 @@ mod tests {
     #[test]
     fn test_parse_separator_no_matches() {
         let args = App::new("test")
-            .arg(Arg::with_name("separator")
-                 .short("s")
-                 .long("separator")
-                 .takes_value(true))
+            .arg(
+                Arg::with_name("separator")
+                    .short("s")
+                    .long("separator")
+                    .takes_value(true),
+            )
             .get_matches_from(vec!["test"]);
 
         let expected = DEFAULT_SEPARATOR;
@@ -291,10 +285,12 @@ mod tests {
     #[test]
     fn test_parse_separator_matches_tab() {
         let args = App::new("test")
-            .arg(Arg::with_name("separator")
-                 .short("s")
-                 .long("separator")
-                 .takes_value(true))
+            .arg(
+                Arg::with_name("separator")
+                    .short("s")
+                    .long("separator")
+                    .takes_value(true),
+            )
             .get_matches_from(vec!["test", "-s", "tab"]);
 
         let expected = KeyValueSep::Tab;
@@ -306,10 +302,12 @@ mod tests {
     #[test]
     fn test_parse_separator_matches_other() {
         let args = App::new("test")
-            .arg(Arg::with_name("separator")
-                 .short("s")
-                 .long("separator")
-                 .takes_value(true))
+            .arg(
+                Arg::with_name("separator")
+                    .short("s")
+                    .long("separator")
+                    .takes_value(true),
+            )
             .get_matches_from(vec!["test", "-s", " = "]);
 
         let expected = KeyValueSep::Other(" = ".to_string());
@@ -317,4 +315,4 @@ mod tests {
 
         assert_eq!(expected, parsed);
     }
-  }
+}
