@@ -8,6 +8,7 @@ repository = "https://github.com/tshlabs/staccato.git"
 readme = "README.md"
 license = "GPL-3.0+"
 keywords = ["statistics", "stats", "cli"]
+edition = "2018"
 
 
 [dependencies]

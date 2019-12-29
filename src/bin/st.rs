@@ -16,19 +16,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-extern crate staccato;
-#[macro_use]
-extern crate clap;
-
 use std::env;
 use std::fs::File;
 use std::io::{stdin, BufReader, Write};
 use std::process;
 
-use clap::{App, Arg, ArgMatches};
+use clap::{crate_version, value_t, App, Arg, ArgMatches};
 use staccato::{get_values, KeyValueSep, SortingPolicy, StatisticsBundle, StatisticsFormatter};
 
-const DEFAULT_PERCENTILES: &'static [u8] = &[];
+const DEFAULT_PERCENTILES: &[u8] = &[];
 const DEFAULT_SEPARATOR: KeyValueSep = KeyValueSep::Colon;
 const DEFAULT_TERM_WIDTH: usize = 72;
 
@@ -115,7 +111,7 @@ fn validate_percents(v: String) -> Result<(), String> {
     Ok(())
 }
 
-fn parse_percents<'a>(matches: &ArgMatches<'a>) -> Vec<u8> {
+fn parse_percents(matches: &ArgMatches) -> Vec<u8> {
     // This is pretty blunt: if it's not a valid value we just drop it
     // and move on. Shouldn't actually matter in practice since we've
     // already validated the value via the `validate_percents` method.
@@ -131,7 +127,7 @@ fn parse_percents<'a>(matches: &ArgMatches<'a>) -> Vec<u8> {
     }
 }
 
-fn parse_separator<'a>(matches: &ArgMatches<'a>) -> KeyValueSep {
+fn parse_separator(matches: &ArgMatches) -> KeyValueSep {
     value_t!(matches, "separator", KeyValueSep).unwrap_or_else(|_| DEFAULT_SEPARATOR.clone())
 }
 

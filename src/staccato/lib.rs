@@ -75,7 +75,7 @@ impl StatisticsBundle {
     /// desired percentile slices (e.g. 90th percentile for a series of
     /// only 7 values) the slices without enough values will be omitted.
     pub fn with_percentiles(vals: &[f64], percentiles: &[u8]) -> Option<StatisticsBundle> {
-        if vals.len() == 0 {
+        if vals.is_empty() {
             return None;
         }
 
@@ -85,7 +85,7 @@ impl StatisticsBundle {
             .collect();
 
         Statistics::from(vals, None).map(|global| StatisticsBundle {
-            global: global,
+            global,
             percentiles: percentile_stats,
         })
     }
@@ -133,14 +133,14 @@ impl Statistics {
         let stddev = Self::compute_stddev(filtered, mean);
 
         Some(Statistics {
-            percentile: percentile,
-            count: count,
-            sum: sum,
-            mean: mean,
-            upper: upper,
-            lower: lower,
-            median: median,
-            stddev: stddev,
+            percentile,
+            count,
+            sum,
+            mean,
+            upper,
+            lower,
+            median,
+            stddev,
         })
     }
 
@@ -286,10 +286,7 @@ impl<'a> StatisticsFormatter<'a> {
     }
 
     pub fn with_sep(bundle: &'a StatisticsBundle, sep: KeyValueSep) -> StatisticsFormatter<'a> {
-        StatisticsFormatter {
-            bundle: bundle,
-            sep: sep,
-        }
+        StatisticsFormatter { bundle, sep }
     }
 
     fn write_to_buf<T: Write>(buf: &mut T, stats: &Statistics, sep: &KeyValueSep) {
