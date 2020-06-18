@@ -1,7 +1,7 @@
 [package]
 name = "staccato"
 version = "0.1.9"
-authors = ["TSH Labs"]
+authors = ["Nick Pillitteri"]
 description = "Statistics from the command line"
 homepage = "https://github.com/tshlabs/staccato"
 repository = "https://github.com/tshlabs/staccato.git"
