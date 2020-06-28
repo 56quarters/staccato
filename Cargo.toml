@@ -3,8 +3,8 @@ name = "staccato"
 version = "0.1.9"
 authors = ["Nick Pillitteri"]
 description = "Statistics from the command line"
-homepage = "https://github.com/tshlabs/staccato"
-repository = "https://github.com/tshlabs/staccato.git"
+homepage = "https://github.com/56quarters/staccato"
+repository = "https://github.com/56quarters/staccato.git"
 readme = "README.md"
 license = "GPL-3.0+"
 keywords = ["statistics", "stats", "cli"]
@@ -18,10 +18,5 @@ clap = "2.11.0"
 name = "staccato"
 path = "src/staccato/lib.rs"
 
-[[bin]]
-name = "st"
-path = "src/bin/st.rs"
-doc = false
-
 [badges]
-travis-ci = { repository = "tshlabs/staccato" }
+travis-ci = { repository = "56quarters/staccato" }

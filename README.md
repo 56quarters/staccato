@@ -1,6 +1,6 @@
 # Staccato
 
-[![Build Status](https://travis-ci.org/tshlabs/staccato.svg?branch=master)](https://travis-ci.org/tshlabs/staccato)
+[![Build Status](https://travis-ci.org/56quarters/staccato.svg?branch=master)](https://travis-ci.org/56quarters/staccato)
 [![crates.io](https://img.shields.io/crates/v/staccato.svg)](https://crates.io/crates/staccato/)
 
 Statistics from the command line!
@@ -25,7 +25,7 @@ toolchain. For more information about how to install Rust see https://www.rustup
 After you have Rust installed, you can build Staccato from source.
 
 ```
-git clone https://github.com/tshlabs/staccato.git && cd staccato
+git clone https://github.com/56quarters/staccato.git && cd staccato
 cargo install --force staccato
 st --help
 ```
@@ -110,7 +110,7 @@ stddev: 0.60871
 
 ## Source
 
-The source code is available on GitHub at https://github.com/tshlabs/staccato
+The source code is available on GitHub at https://github.com/56quarters/staccato
 
 ## Changes
 
