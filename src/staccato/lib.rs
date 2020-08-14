@@ -234,9 +234,6 @@ impl Statistics {
     }
 }
 
-#[derive(PartialEq, Debug, Clone)]
-pub struct KeyValueParseError(());
-
 #[derive(PartialEq, Eq, Debug, Hash, Clone)]
 pub enum KeyValueSep {
     Tab,
@@ -260,8 +257,14 @@ impl fmt::Display for KeyValueSep {
     }
 }
 
+impl Default for KeyValueSep {
+    fn default() -> Self {
+        KeyValueSep::Colon
+    }
+}
+
 impl FromStr for KeyValueSep {
-    type Err = KeyValueParseError;
+    type Err = String;
 
     fn from_str(s: &str) -> Result<KeyValueSep, Self::Err> {
         if "tab" == s {
