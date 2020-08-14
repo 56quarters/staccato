@@ -11,10 +11,6 @@ about the stream of numbers like min, max, mean, median, and standard
 deviation. It can also compute these things about some subset of the stream,
 for example the lower 95% of values.
 
-## Features
-
-Lots of em! Better examples coming soon!
-
 ## Install
 
 ### Cargo (Rust build tool)
