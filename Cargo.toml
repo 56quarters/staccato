@@ -11,7 +11,8 @@ keywords = ["statistics", "stats", "cli"]
 edition = "2018"
 
 [dependencies]
-argh = "0.1.3"
+clap = "3.0.0-beta.2"
+clap_derive = "3.0.0-beta.2"
 
 [lib]
 name = "staccato"
