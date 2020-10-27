@@ -20,9 +20,9 @@ use clap::Clap;
 use staccato::{get_values, KeyValueSep, SortingPolicy, StatisticsBundle, StatisticsFormatter};
 use std::fs::File;
 use std::io::{stdin, BufReader};
+use std::path::PathBuf;
 use std::process;
 use std::str::FromStr;
-use std::path::PathBuf;
 
 /// Staccato is a program for generating statistics from a stream
 /// of numbers from the command line. It reads values from a file or
