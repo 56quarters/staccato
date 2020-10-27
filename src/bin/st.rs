@@ -16,11 +16,13 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-use argh::{FromArgValue, FromArgs};
+use clap::Clap;
 use staccato::{get_values, KeyValueSep, SortingPolicy, StatisticsBundle, StatisticsFormatter};
 use std::fs::File;
 use std::io::{stdin, BufReader};
 use std::process;
+use std::str::FromStr;
+use std::path::PathBuf;
 
 /// Staccato is a program for generating statistics from a stream
 /// of numbers from the command line. It reads values from a file or
@@ -33,14 +35,15 @@ use std::process;
 /// values of the stream. For example, using the argument `-p 25,50`
 /// would compute statistics for the lower 25% of values and lower 50%
 /// of values.
-#[derive(FromArgs, PartialEq, Debug)]
+#[derive(Clap, Debug)]
+#[clap(name = "st")]
 struct StaccatoOptions {
     /// comma separated list of percentiles (from 1 to 99,
     /// inclusive) that should have metrics computed. Default
     /// is not to compute metrics for any specific percentiles,
-    /// only the global metrics."
-    #[argh(option, short = 'p', default = "Percentiles::default()")]
-    percentiles: Percentiles,
+    /// only the global metrics.
+    #[clap(short = 'p', long)]
+    percentiles: Option<Percentiles>,
 
     /// type of separator to use when printing keys and values.
     /// Possible values for this option are the literal string
@@ -49,16 +52,16 @@ struct StaccatoOptions {
     /// as a separator. For example you could use the string
     /// ' => ' as a separator. Default is to use a colon and a
     /// space
-    #[argh(option, short = 's', default = "KeyValueSep::default()")]
-    separator: KeyValueSep,
+    #[clap(short = 's', long)]
+    separator: Option<KeyValueSep>,
 
     /// optional file to read values to from. If not supplied
     /// values will be read from standard input. The values are
     /// expected to be floating point or integer values, one per
     /// line. Leading or trailing whitespace will be removed before
     /// parsing each value.
-    #[argh(positional)]
-    file: Option<String>,
+    #[clap(name = "FILE", parse(from_os_str))]
+    file: Option<PathBuf>,
 }
 
 #[derive(Default, PartialEq, Debug)]
@@ -66,8 +69,10 @@ struct Percentiles {
     value: Vec<u8>,
 }
 
-impl FromArgValue for Percentiles {
-    fn from_arg_value(val: &str) -> Result<Self, String> {
+impl FromStr for Percentiles {
+    type Err = String;
+
+    fn from_str(val: &str) -> Result<Self, Self::Err> {
         let mut out = Vec::new();
         for p in val.split(",") {
             match p.parse::<u8>() {
@@ -85,10 +90,10 @@ impl FromArgValue for Percentiles {
 }
 
 fn main() {
-    let opts: StaccatoOptions = argh::from_env();
-    let percents = opts.percentiles.value;
-    let separator = opts.separator;
-    let sorting = if !percents.is_empty() {
+    let opts: StaccatoOptions = StaccatoOptions::parse();
+    let percents = opts.percentiles.unwrap_or(Percentiles::default());
+    let separator = opts.separator.unwrap_or(KeyValueSep::default());
+    let sorting = if !percents.value.is_empty() {
         SortingPolicy::Sorted
     } else {
         SortingPolicy::Unsorted
@@ -125,7 +130,7 @@ fn main() {
         }
     };
 
-    let stats = StatisticsBundle::with_percentiles(&lines, &percents);
+    let stats = StatisticsBundle::with_percentiles(&lines, &percents.value);
     if let Some(v) = stats {
         print!("{}", StatisticsFormatter::with_sep(&v, separator));
     } else {
@@ -136,12 +141,12 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::Percentiles;
-    use argh::FromArgValue;
+    use std::str::FromStr;
 
     #[test]
     fn test_parse_percentiles_err_not_in_range() {
         let percents = "75,90,100,110";
-        let res = Percentiles::from_arg_value(percents);
+        let res = Percentiles::from_str(percents);
 
         assert!(res.is_err());
     }
@@ -149,7 +154,7 @@ mod tests {
     #[test]
     fn test_parse_percentiles_lower_bound() {
         let percents = "0,50,75";
-        let res = Percentiles::from_arg_value(percents);
+        let res = Percentiles::from_str(percents);
 
         assert!(res.is_err());
     }
@@ -157,7 +162,7 @@ mod tests {
     #[test]
     fn test_parse_percentiles_upper_bound() {
         let percents = "50,75,100";
-        let res = Percentiles::from_arg_value(percents);
+        let res = Percentiles::from_str(percents);
 
         assert!(res.is_err());
     }
@@ -165,7 +170,7 @@ mod tests {
     #[test]
     fn test_parse_percentiles_err_not_a_number() {
         let percents = "75,banana";
-        let res = Percentiles::from_arg_value(percents);
+        let res = Percentiles::from_str(percents);
 
         assert!(res.is_err());
     }
@@ -173,7 +178,7 @@ mod tests {
     #[test]
     fn test_parse_percentiles_ok() {
         let percents = "75,90,95,98";
-        let res = Percentiles::from_arg_value(percents);
+        let res = Percentiles::from_str(percents);
 
         assert!(res.is_ok());
     }
