@@ -15,13 +15,12 @@ for example the lower 95% of values.
 
 ### Cargo (Rust build tool)
 
-Staccato is a Rust project. If you want to build from source, you'll need the Rust
+Staccato is a Rust project. If you want to install it, you'll need the Rust
 toolchain. For more information about how to install Rust see https://www.rustup.rs/
 
-After you have Rust installed, you can build Staccato from source.
+After you have Rust installed, you can use Cargo to install Staccato.
 
 ```
-git clone https://github.com/56quarters/staccato.git && cd staccato
 cargo install --force staccato
 st --help
 ```
